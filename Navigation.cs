@@ -582,6 +582,8 @@ namespace DrRobot.JaguarControl
             aa = p;
             bb = v;
             cc = w;
+            dd = a;
+            ee = b;
             
 
             double w2 = 0.5 * (w + v / robotRadius); //Left rotation
@@ -613,7 +615,7 @@ namespace DrRobot.JaguarControl
 
 
         public Boolean hasStartedTrackingTrajectory;
-        public double trajThresh = 0.3;
+        public double trajThresh = 0.5;
         // THis function is called to follow a trajectory constructed by PRMMotionPlanner()
         private void TrackTrajectory()
         {
