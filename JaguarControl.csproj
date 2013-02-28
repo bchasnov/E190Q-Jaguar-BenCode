@@ -112,6 +112,7 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Trajectory.cs" />
     <EmbeddedResource Include="DrRobotRobotConnection.resx">
       <DependentUpon>DrRobotRobotConnection.cs</DependentUpon>
     </EmbeddedResource>
