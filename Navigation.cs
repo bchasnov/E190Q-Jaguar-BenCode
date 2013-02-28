@@ -16,7 +16,9 @@ namespace DrRobot.JaguarControl
         public double x_est, y_est, t_est;
         public double desiredX, desiredY, desiredT;
 
-        public double currentEncoderPulseL, currentEncoderPulseR, diffEncoderR, diffEncoderL;
+        public double a, b, c, d, e;
+
+        public double currentEncoderPulseL, currentEncoderPulseR;
         public double lastEncoderPulseL, lastEncoderPulseR;
         public double wheelDistanceR, wheelDistanceL;
         public double tiltAngle, zoom;
@@ -56,9 +58,14 @@ namespace DrRobot.JaguarControl
         double time = 0;
         DateTime startTime;
 
-        public short K_P = 15;//15;
-        public short K_I = 0;//0;
-        public short K_D = 3;//3;
+        public double K_P = 1;//15;
+        public double K_I = 0;//0;
+        public double K_D = 3;//3;
+
+        public double K_p = 25;//15;
+        public double K_i = 0;//0;
+        public double K_d = 0;//3;
+
         public short frictionComp = 8750;//8750;
         public double e_sum_R, e_sum_L;
         public double u_R = 0;
@@ -128,6 +135,13 @@ namespace DrRobot.JaguarControl
             displayParticles = true;
             displayNodes = true;
             displaySimRobot = true;
+
+            a = 0;
+            b = 0;
+            c = 0;
+            d = 0;
+            e = 0;
+
         }
 
         // This function is called from the dialogue window "Reset Button"
@@ -215,6 +229,9 @@ namespace DrRobot.JaguarControl
                     else 
                     {
                         // Determine the desired PWM signals for desired wheel speeds
+
+                        desiredRotRateL = 1;
+
                         CalcMotorSignals();
                         ActuateMotorsWithPWMControl();
                     }
@@ -351,15 +368,31 @@ namespace DrRobot.JaguarControl
             motorSignalR = (short)(desiredRotRateR);
 
         }
+        private short count = 1;
+
         public void CalcMotorSignals()
         {
+            if (diffEncoderPulseR == 0 && diffEncoderPulseL == 0 && count < 20)
+            {
+                count += 1;
+                return;
+            }
+
             short zeroOutput = 16383;
             short maxPosOutput = 32767;
-
-
+            // desiredRotRateR = 10;
+            // desiredRotRateL = 10;
+            double deltaTinS = (double)deltaT / 1000;
             // We will use the desiredRotRateRs to set our PWM signals
-            int cur_e_R = desiredRotRateR - ((int)diffEncoderPulseR / deltaT);
-            int cur_e_L = desiredRotRateL - ((int)diffEncoderPulseL / deltaT);
+            desiredRotRateR = 600;
+            desiredRotRateL = 600;
+
+            double currentRotRateR = -jaguarControl.rightFrontWheelMotor.encodeSpeed * jaguarControl.rightFrontWheelMotor.encoderDir;//(diffEncoderPulseR / (count * deltaTinS));
+            double currentRotRateL = jaguarControl.leftFrontWheelMotor.encodeSpeed * jaguarControl.leftFrontWheelMotor.encoderDir;//(diffEncoderPulseL / (count * deltaTinS));
+
+            double cur_e_R = desiredRotRateR - currentRotRateR; //in units of rad per second
+            double cur_e_L = desiredRotRateL - currentRotRateL;
+
             int e_dir_R = (int)(cur_e_R - e_R);
             int e_dir_L = (int)(cur_e_L - e_L);
             e_R = cur_e_R;
@@ -368,20 +401,20 @@ namespace DrRobot.JaguarControl
             int maxErr = (int)(3000 / deltaT);
 
 
-            double K_p = 0.1;//1
-            double K_i = 12 / deltaT;//20
-            double K_d = 100.1;
+            //K_p = 0.1;//1
+            K_i = 0;//12 / deltaT;//20
+            K_d = 0;// 100.1;
 
-            Kpho = 1.5;
-            Kalpha = 8;//4
-            Kbeta = -0.8;//-1.0;
+            //Kpho = 1.5;
+            //Kalpha = 8;//4
+            //Kbeta = -0.8;//-1.0;
 
 
             u_R = K_p * e_R + K_i * e_sum_R + K_d * e_dir_R;
             u_L = K_p * e_L + K_i * e_sum_L + K_d * e_dir_L;
 
-            motorSignalL = (short)(zeroOutput + desiredRotRateL * 300);// (zeroOutput + u_L);
-            motorSignalR = (short)(zeroOutput - desiredRotRateR * 100);//(zeroOutput - u_R);
+            motorSignalL = (short)(zeroOutput + u_L);//(zeroOutput + desiredRotRateL * 300);// (zeroOutput + u_L);
+            motorSignalR = (short)(zeroOutput - u_R);// (zeroOutput - desiredRotRateR * 100);//(zeroOutput - u_R);
 
             motorSignalL = (short)Math.Min(maxPosOutput, Math.Max(0, (int)motorSignalL));
             motorSignalR = (short)Math.Min(maxPosOutput, Math.Max(0, (int)motorSignalR));
@@ -389,6 +422,15 @@ namespace DrRobot.JaguarControl
             e_sum_R = Math.Max(-maxErr, Math.Min(0.90 * e_sum_R + e_R * deltaT, maxErr));
             e_sum_L = Math.Max(-maxErr, Math.Min(0.90 * e_sum_L + e_L * deltaT, maxErr));
 
+            Console.WriteLine(K_p + " " + cur_e_R + " "+ currentRotRateR);//"desired: " + desiredRotRateR.ToString() + " diffEncoderPulseR:" + diffEncoderPulseR + " diff/s:" + diffEncoderPulseR /(count* deltaTinS) + " cur_e_R: " + cur_e_R + " u_R:" + u_R + " motorSignalR:" + motorSignalR);
+
+            a = u_R;
+            b = diffEncoderPulseR;
+            c = diffEncoderPulseR / deltaTinS;
+            d = desiredRotRateR;
+            e = motorSignalR;
+
+            count = 1;
         }
 
         // At every iteration of the control loop, this function sends
@@ -412,8 +454,8 @@ namespace DrRobot.JaguarControl
             else
             {
                 // Setup Control
-                jaguarControl.realJaguar.SetDcMotorVelocityControlPID(3, K_P, K_D, K_I);
-                jaguarControl.realJaguar.SetDcMotorVelocityControlPID(4, K_P, K_D, K_I);
+                jaguarControl.realJaguar.SetDcMotorVelocityControlPID(3, (short)K_P, (short)K_D, (short)K_I);
+                jaguarControl.realJaguar.SetDcMotorVelocityControlPID(4, (short)K_P, (short)K_D, (short)K_I);
 
                 jaguarControl.realJaguar.DcMotorVelocityNonTimeCtrAll(0, 0, 0, motorSignalL, (short)(-motorSignalR), 0);
             }
@@ -453,7 +495,7 @@ namespace DrRobot.JaguarControl
             {
                 TimeSpan ts = DateTime.Now - startTime;
                 time = ts.TotalSeconds;
-                 String newData = time.ToString() + " " + x.ToString() + " " + y.ToString() + " " + t.ToString() ;
+                String newData = time.ToString() + "," + a + "," + b+ "," + c +"," + d+ "," +e;//;+ " " + x.ToString() + " " + y.ToString() + " " + t.ToString() ;
 
                 logFile.WriteLine(newData);
             }
@@ -507,7 +549,7 @@ namespace DrRobot.JaguarControl
             double p = Math.Sqrt(Math.Pow(dx, 2) + Math.Pow(dy, 2)); //distance away from setpoint
             double b = -1.0 * t_est - a + desiredT;
             
-            double v = Kpho * p; //set velocity to v
+            double v = Kpho * p; //set velocity to v (m/s)
             v = Math.Min(maxVelocity, v);
             v = dir * v;
             double w = Kalpha * a + Kbeta * b; //set rotation to w
@@ -525,9 +567,12 @@ namespace DrRobot.JaguarControl
 
             desiredRotRateL = (short)(phi1 * pulsePerMeter);
             desiredRotRateR = (short)(phi2 * pulsePerMeter);
-            System.Console.WriteLine("x: " + x_est.ToString() + " y:" + y_est.ToString() + " t:" + t_est.ToString());
-            System.Console.WriteLine("dx:" + dx.ToString() + " dy:" + dy.ToString() + "p:" + p.ToString() + " a:" + a.ToString() + " b:" + b.ToString() + " v:" + v.ToString()
-                + " w:" + w.ToString() + " w1:" + w1.ToString() + " w2:" + w2.ToString());
+
+            // System.Console.WriteLine("desiredRotRateL: " + desiredRotRateL + " desiredRotRateR: " + desiredRotRateR);
+
+            //System.Console.WriteLine("x: " + x_est.ToString() + " y:" + y_est.ToString() + " t:" + t_est.ToString());
+            //System.Console.WriteLine("dx:" + dx.ToString() + " dy:" + dy.ToString() + "p:" + p.ToString() + " a:" + a.ToString() + " b:" + b.ToString() + " v:" + v.ToString()
+            //    + " w:" + w.ToString() + " w1:" + w1.ToString() + " w2:" + w2.ToString());
 
             //motorSignalL = phi1;
             //motorSignalR = phi2;
@@ -577,37 +622,37 @@ namespace DrRobot.JaguarControl
 
 
 
-            diffEncoderR = -(currentEncoderPulseR - lastEncoderPulseR);
-            diffEncoderL = currentEncoderPulseL - lastEncoderPulseL;
+            diffEncoderPulseR = -(currentEncoderPulseR - lastEncoderPulseR);
+            diffEncoderPulseL = currentEncoderPulseL - lastEncoderPulseL;
 
             // If rollover occurs, this will measure the correct encoder difference
-            if (Math.Abs(diffEncoderR) > 0.5 * encoderMax)
+            if (Math.Abs(diffEncoderPulseR) > 0.5 * encoderMax)
             {
-                if (diffEncoderR < 0)
+                if (diffEncoderPulseR < 0)
                 {
-                    diffEncoderR = -encoderMax - 1 - diffEncoderR;
+                    diffEncoderPulseR = -encoderMax - 1 - diffEncoderPulseR;
                 }
-                if (diffEncoderR > 0)
+                if (diffEncoderPulseR > 0)
                 {
-                    diffEncoderR = encoderMax + 1 - diffEncoderR;
+                    diffEncoderPulseR = encoderMax + 1 - diffEncoderPulseR;
                 }
             }
-            if (Math.Abs(diffEncoderL) > 0.5 * encoderMax)
+            if (Math.Abs(diffEncoderPulseL) > 0.5 * encoderMax)
             {
-                if (diffEncoderL < 0)
+                if (diffEncoderPulseL < 0)
                 {
-                    diffEncoderL = -encoderMax - 1 - diffEncoderL;
+                    diffEncoderPulseL = -encoderMax - 1 - diffEncoderPulseL;
                 }
-                if (diffEncoderL > 0)
+                if (diffEncoderPulseL > 0)
                 {
-                    diffEncoderL = encoderMax + 1 - diffEncoderL;
+                    diffEncoderPulseL = encoderMax + 1 - diffEncoderPulseL;
                 }
             }
 
 
             // distance = r*theta where r=wheelRadius and theta=2*pi*encoderMeasurement/pulsesPerRevolution
-            wheelDistanceR = wheelRadius * 2 * Math.PI * diffEncoderR / pulsesPerRotation;
-            wheelDistanceL = wheelRadius * 2 * Math.PI * diffEncoderL / pulsesPerRotation;
+            wheelDistanceR = wheelRadius * 2 * Math.PI * diffEncoderPulseR / pulsesPerRotation;
+            wheelDistanceL = wheelRadius * 2 * Math.PI * diffEncoderPulseL / pulsesPerRotation;
 
             // Distance travelled is the average of the left and right wheel distances
             distanceTravelled = (wheelDistanceL + wheelDistanceR) / 2;

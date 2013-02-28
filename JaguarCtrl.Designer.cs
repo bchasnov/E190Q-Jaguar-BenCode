@@ -675,6 +675,7 @@
             this.lblVel2.TabIndex = 36;
             this.lblVel2.Text = "0";
             this.lblVel2.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblVel2.Click += new System.EventHandler(this.lblVel2_Click);
             // 
             // lblVel1
             // 

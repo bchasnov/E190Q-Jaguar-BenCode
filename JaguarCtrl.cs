@@ -1202,5 +1202,10 @@ namespace DrRobot.JaguarControl
             paramEdit.Show();
         }
 
+        private void lblVel2_Click(object sender, EventArgs e)
+        {
+
+        }
+
     }
 }

@@ -29,8 +29,36 @@ namespace DrRobot.JaguarControl
             TextBox txt = sender as TextBox;
             if (txt != null)
             {
-                jaguar.navigation.Kpho = Double.Parse(txt.Text);
+                jaguar.navigation.K_p = Double.Parse(txt.Text);
             }
+        }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            K_p.Text = jaguar.navigation.K_p.ToString();
+            K_i.Text = jaguar.navigation.K_i.ToString();
+            K_d.Text = jaguar.navigation.K_d.ToString();
+
+        }
+
+        private void ParamEdit_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label2_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label3_Click(object sender, EventArgs e)
+        {
+
         }
 
 
