@@ -380,6 +380,7 @@ namespace DrRobot.JaguarControl
 
             short zeroOutput = 16383;
             short maxPosOutput = 32767;
+            short motorSignalMin = 4000;
             // desiredRotRateR = 10;
             // desiredRotRateL = 10;
             double deltaTinS = (double)deltaT / 1000;
@@ -415,6 +416,46 @@ namespace DrRobot.JaguarControl
 
             motorSignalL = (short)(zeroOutput + u_L);//(zeroOutput + desiredRotRateL * 300);// (zeroOutput + u_L);
             motorSignalR = (short)(zeroOutput - u_R);// (zeroOutput - desiredRotRateR * 100);//(zeroOutput - u_R);
+            
+
+            // Shift by 4000
+            //if (motorSignalL > zeroOutput) {
+              //       motorSignalL += 4000;
+            //}
+            //else if(motorSignalL<zeroOutput) {motorSignalL -= 4000;}
+            //else {motorSignalL = 0;} 
+
+            //if (motorSignalR > zeroOutput) {
+            //       motorSignalR += 4000;
+            //}
+            //else if(motorSignalR < zeroOutput) {motorSignalR -=4000;}
+            //else {motorSignal R = 0;}
+
+
+            //map to zeroOuput to max: zeroOutput + 4000 to max
+            if (motorSignalL > zeroOutput)
+            {
+                double motorSignalLPercent = (motorSignalL - zeroOutput) / zeroOutput;
+                motorSignalL = (short)(motorSignalLPercent * (zeroOutput - motorSignalMin) + (zeroOutput + motorSignalMin));
+            }
+            else if (motorSignalL < zeroOutput)
+            {
+                double motorSignalLPercent = (zeroOutput - motorSignalL) / zeroOutput;
+                motorSignalL = (short)((zeroOutput - motorSignalMin) - motorSignalLPercent * (zeroOutput - motorSignalMin));
+            }
+            else { motorSignalL = 0; }
+
+            if (motorSignalR > zeroOutput)
+            {
+                double MotorSignalRPercent = (motorSignalR - zeroOutput) / zeroOutput;
+                motorSignalR = (short)(MotorSignalRPercent * (zeroOutput - 4000.0) + (zeroOutput + 4000.0));
+            }
+            else if (motorSignalR < zeroOutput)
+            {
+                double motorSignalRPercent = (zeroOutput - motorSignalR) / zeroOutput;
+                motorSignalR = (short)((zeroOutput - motorSignalMin) - motorSignalRPercent * (zeroOutput - motorSignalMin));
+            }
+            else { motorSignalR = 0; }
 
             motorSignalL = (short)Math.Min(maxPosOutput, Math.Max(0, (int)motorSignalL));
             motorSignalR = (short)Math.Min(maxPosOutput, Math.Max(0, (int)motorSignalR));
@@ -425,10 +466,10 @@ namespace DrRobot.JaguarControl
             Console.WriteLine(K_p + " " + cur_e_R + " "+ currentRotRateR);//"desired: " + desiredRotRateR.ToString() + " diffEncoderPulseR:" + diffEncoderPulseR + " diff/s:" + diffEncoderPulseR /(count* deltaTinS) + " cur_e_R: " + cur_e_R + " u_R:" + u_R + " motorSignalR:" + motorSignalR);
 
             a = u_R;
-            b = diffEncoderPulseR;
-            c = diffEncoderPulseR / deltaTinS;
-            d = desiredRotRateR;
-            e = motorSignalR;
+            b = currentRotRateR;
+            c = desiredRotRateR;
+            d = motorSignalR;
+            e = K_p;
 
             count = 1;
         }
