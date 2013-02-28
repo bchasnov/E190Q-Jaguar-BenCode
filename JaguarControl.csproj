@@ -104,6 +104,12 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Navigation.cs" />
+    <Compile Include="ParamEdit.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ParamEdit.Designer.cs">
+      <DependentUpon>ParamEdit.cs</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="DrRobotRobotConnection.resx">
@@ -116,6 +122,9 @@
     <EmbeddedResource Include="JaguarCtrlResource.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>JaguarCtrlResource.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ParamEdit.resx">
+      <DependentUpon>ParamEdit.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

@@ -22,7 +22,7 @@ namespace DrRobot.JaguarControl
         # region Form Variables
         DrRobotRobotConnection drRobotConnect = null;
         public RobotConfig robotCfg = null;
-        Navigation navigation = null;
+        public Navigation navigation = null;
 
         public RobotConfig.RobotConfigTableRow jaguarSetting = null;
         private const string configFile = "c:\\DrRobotAppFile\\OutDoorRobotConfig.xml";
@@ -32,6 +32,8 @@ namespace DrRobot.JaguarControl
         double[] robotTrackAngles = { Math.PI / 4, Math.PI - Math.PI / 4, Math.PI + Math.PI / 4, -Math.PI / 4 };
         Point[] robotCorners = new Point[4];
         Point[] trackCorners = new Point[4];
+
+        ParamEdit paramEdit;
         # endregion
 
         #region Graphics Variables
@@ -1193,6 +1195,12 @@ namespace DrRobot.JaguarControl
         }
 
         # endregion
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            paramEdit = new ParamEdit(this);
+            paramEdit.Show();
+        }
 
     }
 }
