@@ -40,12 +40,13 @@
             this.Kpho = new System.Windows.Forms.TextBox();
             this.Kalpha = new System.Windows.Forms.TextBox();
             this.Kbeta = new System.Windows.Forms.TextBox();
-            this.textBox6 = new System.Windows.Forms.TextBox();
+            this.trajThresh = new System.Windows.Forms.TextBox();
             this.textBox7 = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
+            this.label6 = new System.Windows.Forms.Label();
             this.contextMenuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -137,12 +138,13 @@
             this.Kbeta.TabIndex = 9;
             this.Kbeta.TextChanged += new System.EventHandler(this.Kbeta_TextChanged);
             // 
-            // textBox6
+            // trajThresh
             // 
-            this.textBox6.Location = new System.Drawing.Point(72, 169);
-            this.textBox6.Name = "textBox6";
-            this.textBox6.Size = new System.Drawing.Size(76, 20);
-            this.textBox6.TabIndex = 10;
+            this.trajThresh.Location = new System.Drawing.Point(72, 169);
+            this.trajThresh.Name = "trajThresh";
+            this.trajThresh.Size = new System.Drawing.Size(76, 20);
+            this.trajThresh.TabIndex = 10;
+            this.trajThresh.TextChanged += new System.EventHandler(this.trajThresh_TextChanged);
             // 
             // textBox7
             // 
@@ -187,17 +189,27 @@
             this.label7.TabIndex = 15;
             this.label7.Text = "Kbeta";
             // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(17, 172);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(54, 13);
+            this.label6.TabIndex = 16;
+            this.label6.Text = "trajThresh";
+            // 
             // ParamEdit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(298, 262);
+            this.Controls.Add(this.label6);
             this.Controls.Add(this.label7);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.textBox7);
-            this.Controls.Add(this.textBox6);
+            this.Controls.Add(this.trajThresh);
             this.Controls.Add(this.Kbeta);
             this.Controls.Add(this.Kalpha);
             this.Controls.Add(this.Kpho);
@@ -229,12 +241,13 @@
         private System.Windows.Forms.TextBox Kpho;
         private System.Windows.Forms.TextBox Kalpha;
         private System.Windows.Forms.TextBox Kbeta;
-        private System.Windows.Forms.TextBox textBox6;
+        private System.Windows.Forms.TextBox trajThresh;
         private System.Windows.Forms.TextBox textBox7;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.Label label6;
 
 
     }

@@ -53,6 +53,8 @@ namespace DrRobot.JaguarControl
         private static Pen blackPen = new Pen(Color.Black, 1);
         private static Pen whitePen = new Pen(Color.White, 10);
         private static Pen thinWhitePen = new Pen(Color.White, 1);
+        private static Pen medBluePen = new Pen(Color.LightBlue, 3);
+        private static Pen medGreenPen = new Pen(Color.FromArgb(0,255,0), 3);
         private static Pen goldPen = new Pen(Color.Gold, 1);
         private static Pen trackPen = new Pen(Brushes.LightGray);
         private static double cellWidth = 1.0; // in meters, mapResolution is in metersToPixels
@@ -147,6 +149,9 @@ namespace DrRobot.JaguarControl
         public int MANUAL = 0;
         public int AUTONOMOUS = 1;
         public int controlMode = 0;
+        public int AUTO_TRACKTRAJ = 0;
+        public int AUTO_TRACKSETPOINT = 1;
+        public int autoMode = 0;
         private Thread sensorThread;
         public bool runSensorThread;
         #endregion
@@ -291,11 +296,56 @@ namespace DrRobot.JaguarControl
                 int Y_laser = (int)(yCenter - yShift - laserDiagonal * Math.Sin(navigation.t) - laserDiameter / 2);
                 g.FillEllipse(Brushes.LightGray, X_laser, Y_laser, laserDiameter, laserDiameter);
 
+                // Draw Trajectory
+                foreach (JagPoint p in navigation.trajectory.points)
+                {
+                    //Draw x,y
+                    drawPoint(g, medBluePen, p);
+                }
+
+                drawPoint(g, medGreenPen, new JagPoint(navigation.desiredX, navigation.desiredY, navigation.desiredT));
+
+                // Draw Path
+
+                JagPoint prev_p = navigation.breadCrumbs.points[0];
+
+                int xPoint_tmp = (int)(prev_p.x * mapResolution);
+                int yPoint_tmp = (int)(prev_p.y * mapResolution);
+                for ( int i = 1; i < navigation.breadCrumbs.points.Count; i++)
+                {
+                    JagPoint p = navigation.breadCrumbs.points[i];
+                    int xPoint = (int)(p.x * mapResolution);
+                    int yPoint = (int)(p.y * mapResolution);
+                    //if (xPoint_tmp == xPoint && yPoint_tmp == yPoint) break;
+
+                    g.DrawLine(thinWhitePen, xCenter + xPoint_tmp, yCenter - yPoint_tmp, xCenter + xPoint, yCenter - yPoint);
+                    xPoint_tmp = xPoint;
+                    yPoint_tmp = yPoint;
+                }
+                
+
+
                 // Draw the bitmap to the form
                 this.CreateGraphics().DrawImageUnscaled(gBuffer, 0, 0);
             }
         }
-        
+
+        private void drawPoint(Graphics g, Pen pen, JagPoint p)
+        {
+            //Draw x,y
+            int radius = 5;
+            int xPoint = (int)(p.x * mapResolution);
+            int yPoint = (int)(p.y * mapResolution);
+            g.DrawEllipse(pen, new Rectangle(xCenter + xPoint - radius, yCenter - yPoint - radius, 2 * radius, 2 * radius));
+
+            //Draw theta
+            if (p.hasTheta())
+            {
+                int dy = (int)(3 * radius * Math.Sin(p.theta));
+                int dx = (int)(3 * radius * Math.Cos(p.theta));
+                g.DrawLine(pen, xCenter + xPoint, yCenter - yPoint, xCenter + xPoint + dx, yCenter - yPoint - dy);
+            }
+        }
 
         private void JaguarCtrl_Shown(object sender, EventArgs e)
         {
@@ -515,6 +565,12 @@ namespace DrRobot.JaguarControl
             lblEncoderPos4.Text = navigation.x.ToString();
             lblVel4.Text = navigation.y.ToString();
             lblTemp4.Text = navigation.t.ToString();
+            if (!desActivate.Checked)
+            {
+                txtStartTheta.Text = navigation.desiredT.ToString();
+                txtStartLong.Text = navigation.desiredY.ToString();
+                txtStartLat.Text = navigation.desiredX.ToString();
+            }
         }
 
         private void UpdateFormEncoderData()
@@ -1192,6 +1248,7 @@ namespace DrRobot.JaguarControl
             {
             }
             controlMode = AUTONOMOUS;
+            autoMode = AUTO_TRACKSETPOINT;
         }
 
         # endregion
@@ -1205,6 +1262,28 @@ namespace DrRobot.JaguarControl
         private void lblVel2_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+
+            controlMode = AUTONOMOUS;
+            autoMode = AUTO_TRACKTRAJ;
+        }
+
+        private void lblEncoderPos4_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void lblVel4_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void desActivate_CheckedChanged(object sender, EventArgs e)
+        {
+            
         }
 
     }

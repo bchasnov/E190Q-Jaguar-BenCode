@@ -110,6 +110,8 @@
             this.desiredT = new System.Windows.Forms.Label();
             this.txtStartTheta = new System.Windows.Forms.TextBox();
             this.button1 = new System.Windows.Forms.Button();
+            this.button2 = new System.Windows.Forms.Button();
+            this.desActivate = new System.Windows.Forms.CheckBox();
             this.groupBoxGPSIMU.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.realJaguar)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxIMUGPS)).BeginInit();
@@ -556,18 +558,18 @@
             // txtStartLong
             // 
             this.txtStartLong.Font = new System.Drawing.Font("Arial", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtStartLong.Location = new System.Drawing.Point(134, 426);
+            this.txtStartLong.Location = new System.Drawing.Point(142, 427);
             this.txtStartLong.Name = "txtStartLong";
-            this.txtStartLong.Size = new System.Drawing.Size(47, 20);
+            this.txtStartLong.Size = new System.Drawing.Size(41, 20);
             this.txtStartLong.TabIndex = 29;
             this.txtStartLong.Text = "0";
             // 
             // txtStartLat
             // 
             this.txtStartLat.Font = new System.Drawing.Font("Arial", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtStartLat.Location = new System.Drawing.Point(44, 426);
+            this.txtStartLat.Location = new System.Drawing.Point(63, 427);
             this.txtStartLat.Name = "txtStartLat";
-            this.txtStartLat.Size = new System.Drawing.Size(45, 20);
+            this.txtStartLat.Size = new System.Drawing.Size(36, 20);
             this.txtStartLat.TabIndex = 28;
             this.txtStartLat.Text = "0";
             // 
@@ -575,7 +577,7 @@
             // 
             this.label11.Font = new System.Drawing.Font("Arial", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label11.ForeColor = System.Drawing.Color.Black;
-            this.label11.Location = new System.Drawing.Point(97, 427);
+            this.label11.Location = new System.Drawing.Point(105, 428);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(59, 18);
             this.label11.TabIndex = 27;
@@ -586,7 +588,7 @@
             // 
             this.label12.Font = new System.Drawing.Font("Arial", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label12.ForeColor = System.Drawing.Color.Black;
-            this.label12.Location = new System.Drawing.Point(7, 427);
+            this.label12.Location = new System.Drawing.Point(26, 428);
             this.label12.Name = "label12";
             this.label12.Size = new System.Drawing.Size(61, 18);
             this.label12.TabIndex = 26;
@@ -596,11 +598,11 @@
             // btnSetStartPoint
             // 
             this.btnSetStartPoint.Font = new System.Drawing.Font("Arial", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnSetStartPoint.Location = new System.Drawing.Point(285, 424);
+            this.btnSetStartPoint.Location = new System.Drawing.Point(343, 425);
             this.btnSetStartPoint.Name = "btnSetStartPoint";
-            this.btnSetStartPoint.Size = new System.Drawing.Size(90, 25);
+            this.btnSetStartPoint.Size = new System.Drawing.Size(68, 25);
             this.btnSetStartPoint.TabIndex = 25;
-            this.btnSetStartPoint.Text = "FlyToSetPoint";
+            this.btnSetStartPoint.Text = "FlyToSetPt";
             this.btnSetStartPoint.UseVisualStyleBackColor = true;
             this.btnSetStartPoint.Click += new System.EventHandler(this.btnSetStartPoint_Click);
             // 
@@ -651,6 +653,7 @@
             this.lblEncoderPos4.TabIndex = 34;
             this.lblEncoderPos4.Text = "0";
             this.lblEncoderPos4.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblEncoderPos4.Click += new System.EventHandler(this.lblEncoderPos4_Click);
             // 
             // lblVel4
             // 
@@ -663,6 +666,7 @@
             this.lblVel4.TabIndex = 38;
             this.lblVel4.Text = "0";
             this.lblVel4.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblVel4.Click += new System.EventHandler(this.lblVel4_Click);
             // 
             // lblVel2
             // 
@@ -728,11 +732,11 @@
             // btnSetMapCenter
             // 
             this.btnSetMapCenter.Font = new System.Drawing.Font("Arial", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnSetMapCenter.Location = new System.Drawing.Point(395, 424);
+            this.btnSetMapCenter.Location = new System.Drawing.Point(417, 426);
             this.btnSetMapCenter.Name = "btnSetMapCenter";
-            this.btnSetMapCenter.Size = new System.Drawing.Size(90, 25);
+            this.btnSetMapCenter.Size = new System.Drawing.Size(68, 25);
             this.btnSetMapCenter.TabIndex = 44;
-            this.btnSetMapCenter.Text = "SaveSetPoint";
+            this.btnSetMapCenter.Text = "SaveSetPt";
             this.btnSetMapCenter.UseVisualStyleBackColor = true;
             this.btnSetMapCenter.Click += new System.EventHandler(this.btnSetMapCenter_Click);
             // 
@@ -996,7 +1000,7 @@
             // 
             this.desiredT.Font = new System.Drawing.Font("Arial", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.desiredT.ForeColor = System.Drawing.Color.Black;
-            this.desiredT.Location = new System.Drawing.Point(189, 427);
+            this.desiredT.Location = new System.Drawing.Point(188, 428);
             this.desiredT.Name = "desiredT";
             this.desiredT.Size = new System.Drawing.Size(59, 18);
             this.desiredT.TabIndex = 69;
@@ -1006,7 +1010,7 @@
             // txtStartTheta
             // 
             this.txtStartTheta.Font = new System.Drawing.Font("Arial", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtStartTheta.Location = new System.Drawing.Point(224, 426);
+            this.txtStartTheta.Location = new System.Drawing.Point(224, 427);
             this.txtStartTheta.Name = "txtStartTheta";
             this.txtStartTheta.Size = new System.Drawing.Size(47, 20);
             this.txtStartTheta.TabIndex = 70;
@@ -1022,12 +1026,35 @@
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
+            // button2
+            // 
+            this.button2.Font = new System.Drawing.Font("Arial", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.button2.Location = new System.Drawing.Point(273, 425);
+            this.button2.Name = "button2";
+            this.button2.Size = new System.Drawing.Size(64, 25);
+            this.button2.TabIndex = 72;
+            this.button2.Text = "TrackTraj";
+            this.button2.UseVisualStyleBackColor = true;
+            this.button2.Click += new System.EventHandler(this.button2_Click);
+            // 
+            // desActivate
+            // 
+            this.desActivate.AutoSize = true;
+            this.desActivate.Location = new System.Drawing.Point(6, 430);
+            this.desActivate.Name = "desActivate";
+            this.desActivate.Size = new System.Drawing.Size(15, 14);
+            this.desActivate.TabIndex = 73;
+            this.desActivate.UseVisualStyleBackColor = true;
+            this.desActivate.CheckedChanged += new System.EventHandler(this.desActivate_CheckedChanged);
+            // 
             // JaguarCtrl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ControlLight;
             this.ClientSize = new System.Drawing.Size(1016, 698);
+            this.Controls.Add(this.desActivate);
+            this.Controls.Add(this.button2);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.txtStartTheta);
             this.Controls.Add(this.desiredT);
@@ -1192,6 +1219,8 @@
         private System.Windows.Forms.Label desiredT;
         public System.Windows.Forms.TextBox txtStartTheta;
         private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.CheckBox desActivate;
     }
 }
 

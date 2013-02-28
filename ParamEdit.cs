@@ -47,7 +47,7 @@ namespace DrRobot.JaguarControl
             Kalpha.Text = jaguar.navigation.Kalpha.ToString();
             Kpho.Text = jaguar.navigation.Kpho.ToString();
             Kbeta.Text = jaguar.navigation.Kbeta.ToString();
-
+            trajThresh.Text = jaguar.navigation.trajThresh.ToString();
 
         }
 
@@ -80,6 +80,15 @@ namespace DrRobot.JaguarControl
             if (txt != null)
             {
                 jaguar.navigation.Kbeta = Double.Parse(txt.Text);
+            }
+        }
+
+        private void trajThresh_TextChanged(object sender, EventArgs e)
+        {
+            TextBox txt = sender as TextBox;
+            if (txt != null)
+            {
+                jaguar.navigation.trajThresh = Double.Parse(txt.Text);
             }
         }
 

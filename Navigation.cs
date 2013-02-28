@@ -16,7 +16,7 @@ namespace DrRobot.JaguarControl
         public double x_est, y_est, t_est;
         public double desiredX, desiredY, desiredT;
 
-        public double a, b, c, d, e;
+        public double aa, bb, cc, dd, ee;
 
         public double currentEncoderPulseL, currentEncoderPulseR;
         public double lastEncoderPulseL, lastEncoderPulseR;
@@ -76,6 +76,10 @@ namespace DrRobot.JaguarControl
         public double accCalib_x = 18;
         public double accCalib_y = 4;
 
+        public JagTrajectory trajectory;
+        public JagPath breadCrumbs;
+        public int breadCrumbsInterval = 200;
+        public int breadCrumbsCount = 0;
         #endregion
 
 
@@ -136,12 +140,25 @@ namespace DrRobot.JaguarControl
             displayNodes = true;
             displaySimRobot = true;
 
-            a = 0;
-            b = 0;
-            c = 0;
-            d = 0;
-            e = 0;
+            aa = 0;
+            bb = 0;
+            cc = 0;
+            dd = 0;
+            ee = 0;
 
+            trajectory = new JagTrajectory();
+            /*
+            trajectory.addPoint(new jagPoint(1, 1, 1));
+            trajectory.addPoint(new jagPoint(2, 2, 1));
+            trajectory.addPoint(new jagPoint(3, 3, 1));
+            trajectory.addPoint(new jagPoint(4, 4, 1));
+            trajectory.addPoint(new jagPoint(4, 5, 1));*/
+            trajectory = JagTrajectory.parseTxt(JagTrajectory.circleTrajStr);
+            hasStartedTrackingTrajectory = false;
+
+            breadCrumbs = new JagPath();
+            breadCrumbs.addPoint(new JagPoint(x, y, t));
+            breadCrumbsCount = 0;
         }
 
         // This function is called from the dialogue window "Reset Button"
@@ -215,8 +232,16 @@ namespace DrRobot.JaguarControl
                     //WallPositioning();
 
                     // Drive the robot to a desired Point (lab 3)
+                    if (jaguarControl.autoMode == jaguarControl.AUTO_TRACKTRAJ)
+                    {
+                        TrackTrajectory();
+                    }
                     FlyToSetPoint();
-
+                    breadCrumbsCount += deltaT;
+                    if (breadCrumbsCount >= breadCrumbsInterval)
+                    {
+                        breadCrumbs.addPoint(new JagPoint(x, y, t));
+                    }
                     // Follow the trajectory instead of a desired point (lab 3)
                     //TrackTrajectory();
 
@@ -424,11 +449,11 @@ namespace DrRobot.JaguarControl
 
             Console.WriteLine(K_p + " " + cur_e_R + " "+ currentRotRateR);//"desired: " + desiredRotRateR.ToString() + " diffEncoderPulseR:" + diffEncoderPulseR + " diff/s:" + diffEncoderPulseR /(count* deltaTinS) + " cur_e_R: " + cur_e_R + " u_R:" + u_R + " motorSignalR:" + motorSignalR);
 
-            a = u_R;
-            b = diffEncoderPulseR;
-            c = diffEncoderPulseR / deltaTinS;
-            d = desiredRotRateR;
-            e = motorSignalR;
+            aa = u_R;
+            bb = diffEncoderPulseR;
+            cc = diffEncoderPulseR / deltaTinS;
+            dd = desiredRotRateR;
+            ee = motorSignalR;
 
             count = 1;
         }
@@ -495,7 +520,7 @@ namespace DrRobot.JaguarControl
             {
                 TimeSpan ts = DateTime.Now - startTime;
                 time = ts.TotalSeconds;
-                String newData = time.ToString() + "," + a + "," + b+ "," + c +"," + d+ "," +e;//;+ " " + x.ToString() + " " + y.ToString() + " " + t.ToString() ;
+                String newData = time.ToString() + "," + aa + "," + bb+ "," + cc +"," + dd+ "," +ee;//;+ " " + x.ToString() + " " + y.ToString() + " " + t.ToString() ;
 
                 logFile.WriteLine(newData);
             }
@@ -547,14 +572,16 @@ namespace DrRobot.JaguarControl
             }
 
             double p = Math.Sqrt(Math.Pow(dx, 2) + Math.Pow(dy, 2)); //distance away from setpoint
-            double b = -1.0 * t_est - a + desiredT;
+            double b = -1.0 * t_est - a + boundAngle(desiredT, 2) ;
             
             double v = Kpho * p; //set velocity to v (m/s)
             v = Math.Min(maxVelocity, v);
             v = dir * v;
             double w = Kalpha * a + Kbeta * b; //set rotation to w
 
-
+            aa = p;
+            bb = v;
+            cc = w;
             
 
             double w2 = 0.5 * (w + v / robotRadius); //Left rotation
@@ -585,10 +612,27 @@ namespace DrRobot.JaguarControl
         }
 
 
-
+        public Boolean hasStartedTrackingTrajectory;
+        public double trajThresh = 0.3;
         // THis function is called to follow a trajectory constructed by PRMMotionPlanner()
         private void TrackTrajectory()
         {
+            if (!hasStartedTrackingTrajectory)
+            {
+                JagPoint target = trajectory.getTargetPoint();
+                desiredX = target.x;
+                desiredY = target.y;
+                desiredT = target.hasTheta() ? target.theta : 0;
+            }
+            if(!trajectory.isEnd() && trajectory.isWithinTheshhold(trajThresh,new JagPoint(x_est,y_est)))
+            {
+                trajectory.nextPoint();
+
+                JagPoint target = trajectory.getTargetPoint();
+                desiredX = target.x;
+                desiredY = target.y;
+                desiredT = target.hasTheta() ? target.theta : 0;
+            }
 
         }
 
@@ -728,6 +772,24 @@ namespace DrRobot.JaguarControl
 
         }
         #endregion
+
+        private double boundAngle(double theta, double sthPi)
+        {
+            //if sthpi is 2, then it bounds between 0 and 2pi
+            if (theta <= sthPi * Math.PI && theta >= sthPi * Math.PI - 2 * Math.PI)
+            {
+                return theta;
+            }
+            if (theta > sthPi * Math.PI)
+            {
+                theta -= Math.PI;
+            }
+            else if (theta < sthPi * Math.PI - 2 * Math.PI)
+            {
+                theta += Math.PI;
+            }
+            return boundAngle(theta, sthPi);
+        }
 
     }
 }
