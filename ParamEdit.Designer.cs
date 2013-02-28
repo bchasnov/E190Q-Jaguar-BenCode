@@ -37,12 +37,15 @@
             this.label2 = new System.Windows.Forms.Label();
             this.K_i = new System.Windows.Forms.TextBox();
             this.K_d = new System.Windows.Forms.TextBox();
-            this.textBox3 = new System.Windows.Forms.TextBox();
-            this.textBox4 = new System.Windows.Forms.TextBox();
-            this.textBox5 = new System.Windows.Forms.TextBox();
+            this.Kpho = new System.Windows.Forms.TextBox();
+            this.Kalpha = new System.Windows.Forms.TextBox();
+            this.Kbeta = new System.Windows.Forms.TextBox();
             this.textBox6 = new System.Windows.Forms.TextBox();
             this.textBox7 = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
+            this.label7 = new System.Windows.Forms.Label();
             this.contextMenuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -95,7 +98,6 @@
             this.label2.Size = new System.Drawing.Size(22, 13);
             this.label2.TabIndex = 4;
             this.label2.Text = "K_i";
-            this.label2.Click += new System.EventHandler(this.label2_Click);
             // 
             // K_i
             // 
@@ -111,26 +113,29 @@
             this.K_d.Size = new System.Drawing.Size(76, 20);
             this.K_d.TabIndex = 6;
             // 
-            // textBox3
+            // Kpho
             // 
-            this.textBox3.Location = new System.Drawing.Point(72, 91);
-            this.textBox3.Name = "textBox3";
-            this.textBox3.Size = new System.Drawing.Size(76, 20);
-            this.textBox3.TabIndex = 7;
+            this.Kpho.Location = new System.Drawing.Point(72, 91);
+            this.Kpho.Name = "Kpho";
+            this.Kpho.Size = new System.Drawing.Size(76, 20);
+            this.Kpho.TabIndex = 7;
+            this.Kpho.TextChanged += new System.EventHandler(this.Kpho_TextChanged);
             // 
-            // textBox4
+            // Kalpha
             // 
-            this.textBox4.Location = new System.Drawing.Point(72, 117);
-            this.textBox4.Name = "textBox4";
-            this.textBox4.Size = new System.Drawing.Size(76, 20);
-            this.textBox4.TabIndex = 8;
+            this.Kalpha.Location = new System.Drawing.Point(72, 117);
+            this.Kalpha.Name = "Kalpha";
+            this.Kalpha.Size = new System.Drawing.Size(76, 20);
+            this.Kalpha.TabIndex = 8;
+            this.Kalpha.TextChanged += new System.EventHandler(this.Kalpha_TextChanged);
             // 
-            // textBox5
+            // Kbeta
             // 
-            this.textBox5.Location = new System.Drawing.Point(72, 143);
-            this.textBox5.Name = "textBox5";
-            this.textBox5.Size = new System.Drawing.Size(76, 20);
-            this.textBox5.TabIndex = 9;
+            this.Kbeta.Location = new System.Drawing.Point(72, 143);
+            this.Kbeta.Name = "Kbeta";
+            this.Kbeta.Size = new System.Drawing.Size(76, 20);
+            this.Kbeta.TabIndex = 9;
+            this.Kbeta.TextChanged += new System.EventHandler(this.Kbeta_TextChanged);
             // 
             // textBox6
             // 
@@ -154,19 +159,48 @@
             this.label3.Size = new System.Drawing.Size(26, 13);
             this.label3.TabIndex = 12;
             this.label3.Text = "K_d";
-            this.label3.Click += new System.EventHandler(this.label3_Click);
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(39, 94);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(32, 13);
+            this.label4.TabIndex = 13;
+            this.label4.Text = "Kpho";
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(31, 120);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(40, 13);
+            this.label5.TabIndex = 14;
+            this.label5.Text = "Kalpha";
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(31, 146);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(35, 13);
+            this.label7.TabIndex = 15;
+            this.label7.Text = "Kbeta";
             // 
             // ParamEdit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(298, 262);
+            this.Controls.Add(this.label7);
+            this.Controls.Add(this.label5);
+            this.Controls.Add(this.label4);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.textBox7);
             this.Controls.Add(this.textBox6);
-            this.Controls.Add(this.textBox5);
-            this.Controls.Add(this.textBox4);
-            this.Controls.Add(this.textBox3);
+            this.Controls.Add(this.Kbeta);
+            this.Controls.Add(this.Kalpha);
+            this.Controls.Add(this.Kpho);
             this.Controls.Add(this.K_d);
             this.Controls.Add(this.K_i);
             this.Controls.Add(this.label2);
@@ -192,12 +226,15 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.TextBox K_i;
         private System.Windows.Forms.TextBox K_d;
-        private System.Windows.Forms.TextBox textBox3;
-        private System.Windows.Forms.TextBox textBox4;
-        private System.Windows.Forms.TextBox textBox5;
+        private System.Windows.Forms.TextBox Kpho;
+        private System.Windows.Forms.TextBox Kalpha;
+        private System.Windows.Forms.TextBox Kbeta;
         private System.Windows.Forms.TextBox textBox6;
         private System.Windows.Forms.TextBox textBox7;
         private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Label label7;
 
 
     }

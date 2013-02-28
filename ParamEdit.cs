@@ -16,6 +16,7 @@ namespace DrRobot.JaguarControl
         {
             jaguar = jc;
             InitializeComponent();
+            button1.PerformClick();
         }
 
         private void linkParams()
@@ -43,6 +44,10 @@ namespace DrRobot.JaguarControl
             K_p.Text = jaguar.navigation.K_p.ToString();
             K_i.Text = jaguar.navigation.K_i.ToString();
             K_d.Text = jaguar.navigation.K_d.ToString();
+            Kalpha.Text = jaguar.navigation.Kalpha.ToString();
+            Kpho.Text = jaguar.navigation.Kpho.ToString();
+            Kbeta.Text = jaguar.navigation.Kbeta.ToString();
+
 
         }
 
@@ -51,14 +56,31 @@ namespace DrRobot.JaguarControl
 
         }
 
-        private void label2_Click(object sender, EventArgs e)
+        private void Kpho_TextChanged(object sender, EventArgs e)
         {
-
+            TextBox txt = sender as TextBox;
+            if (txt != null)
+            {
+                jaguar.navigation.Kpho = Double.Parse(txt.Text);
+            }
         }
 
-        private void label3_Click(object sender, EventArgs e)
+        private void Kalpha_TextChanged(object sender, EventArgs e)
         {
+            TextBox txt = sender as TextBox;
+            if (txt != null)
+            {
+                jaguar.navigation.Kalpha = Double.Parse(txt.Text);
+            }
+        }
 
+        private void Kbeta_TextChanged(object sender, EventArgs e)
+        {
+            TextBox txt = sender as TextBox;
+            if (txt != null)
+            {
+                jaguar.navigation.Kbeta = Double.Parse(txt.Text);
+            }
         }
 
 
