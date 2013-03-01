@@ -552,7 +552,21 @@ namespace DrRobot.JaguarControl
             // ****************** Additional Student Code: End   ************                
         }
 
+        public Boolean initFlyToSetPoint;
+        public int dir;
 
+        public void setSetPoint(double xx, double yy, double tt)
+        {
+            desiredX = xx;
+            desiredY = yy;
+            desiredT = tt;
+            resetFlyToSetPoint();
+        }
+
+        public void resetFlyToSetPoint()
+        {
+            initFlyToSetPoint = true;
+        }
         // This function is called at every iteration of the control loop
         // if used, this function can drive the robot to any desired
         // robot state. It does not check for collisions
@@ -560,20 +574,30 @@ namespace DrRobot.JaguarControl
         {
 
             // ****************** Additional Student Code: Start ************
-            int dir = 1;
+            //int dir = 1;
 
             double dx = desiredX - x_est;
             double dy = desiredY - y_est;
 
             double a = -1.0 * t_est + Math.Atan2(dy, dx);
-            if(a < -Math.PI/2 || a>Math.PI/2){
-                dir = -1;
-                a = -1.0 * t_est + Math.Atan2(-dy, -dx);
+            a = boundAngle(a, 1);
+            if (initFlyToSetPoint)
+            {//rear facing
+                if (a < -Math.PI / 2 || a > Math.PI / 2)
+                {
+                    dir = -1;
+                }
+                else { dir = 1; }
+                Console.WriteLine("direction: " + dir);
+                initFlyToSetPoint = false;
             }
-
+            a = -1.0 * t_est + Math.Atan2(dir * dy, dir * dx);
+            a = boundAngle(a, 1);
             double p = Math.Sqrt(Math.Pow(dx, 2) + Math.Pow(dy, 2)); //distance away from setpoint
-            double b = -1.0 * t_est - a + boundAngle(desiredT, 2) ;
-            
+            double b = -1.0 * t_est - a + boundAngle(desiredT, 1) ;
+            b = boundAngle(b, 1);
+
+            Console.WriteLine("desired: {0} 2: {1} 1: {2}", desiredT, boundAngle(desiredT, 2), boundAngle(desiredT, 1));
             double v = Kpho * p; //set velocity to v (m/s)
             v = Math.Min(maxVelocity, v);
             v = dir * v;
@@ -592,7 +616,7 @@ namespace DrRobot.JaguarControl
             double phi1 = -1.0 * robotRadius * w1 / wheelRadius;
             double phi2 = robotRadius * w2 / wheelRadius;
 
-            double pulsePerMeter = pulsesPerRotation / (wheelRadius * 2 * Math.PI);
+            double pulsePerMeter = pulsesPerRotation / (2 * Math.PI);
 
             desiredRotRateL = (short)(phi1 * pulsePerMeter);
             desiredRotRateR = (short)(phi2 * pulsePerMeter);
@@ -615,16 +639,18 @@ namespace DrRobot.JaguarControl
 
 
         public Boolean hasStartedTrackingTrajectory;
-        public double trajThresh = 0.5;
+        public double trajThresh = 0.1;
         // THis function is called to follow a trajectory constructed by PRMMotionPlanner()
         private void TrackTrajectory()
         {
+            if (trajectory.empty())
+                return;
+
             if (!hasStartedTrackingTrajectory)
             {
                 JagPoint target = trajectory.getTargetPoint();
-                desiredX = target.x;
-                desiredY = target.y;
-                desiredT = target.hasTheta() ? target.theta : 0;
+                setSetPoint(target.x, target.y, trajectory.tangent());
+                hasStartedTrackingTrajectory = true;
             }
             if(!trajectory.isEnd() && trajectory.isWithinTheshhold(trajThresh,new JagPoint(x_est,y_est)))
             {
@@ -634,6 +660,8 @@ namespace DrRobot.JaguarControl
                 desiredX = target.x;
                 desiredY = target.y;
                 desiredT = target.hasTheta() ? target.theta : 0;
+
+                resetFlyToSetPoint();
             }
 
         }
@@ -784,11 +812,11 @@ namespace DrRobot.JaguarControl
             }
             if (theta > sthPi * Math.PI)
             {
-                theta -= Math.PI;
+                theta -= 2*Math.PI;
             }
             else if (theta < sthPi * Math.PI - 2 * Math.PI)
             {
-                theta += Math.PI;
+                theta += 2*Math.PI;
             }
             return boundAngle(theta, sthPi);
         }

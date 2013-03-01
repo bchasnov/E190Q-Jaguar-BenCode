@@ -40,6 +40,11 @@ namespace DrRobot.JaguarControl
         {
             return Math.Sqrt(Math.Pow(a.x-b.x,2)+Math.Pow(a.y-b.y,2));
         }
+
+        static public double slopeTheta(JagPoint a, JagPoint b)
+        {
+            return Math.Atan2(b.y - a.y, b.x - a.x);
+        }
     }
 
     public class JagPath
@@ -62,6 +67,8 @@ namespace DrRobot.JaguarControl
         public static String circleTrajStr = "3,0,1.57075;1.500020485,2.598064384,2.617939667;-1.499959031,2.598099865,3.665129333;"
    + "-2.999999999,7.09608E-05,4.712319;-1.500081938,-2.598028903,5.759508667;1.499897576,-2.598135343,6.806698333;3,0,1.57075";
 
+        public static String squareTrajStr = "3,3;3,-3;-3,-3;-3,3;3,3;3,-3;-3,-3;-3,3";
+
         public List<JagPoint> points;
         int index = 0;
         public JagTrajectory()
@@ -79,12 +86,28 @@ namespace DrRobot.JaguarControl
             return points[index];
         }
 
+        public Boolean empty()
+        {
+            return points.Count == 0;
+        }
+
         public void nextPoint()
         {
             if(index +1 < points.Count)
             {
                 index += 1;
             }
+        }
+        public double tangent()
+        {
+            if(getTargetPoint().hasTheta())
+            {
+                return getTargetPoint().theta;
+            }
+            int prev = index > 1 ? index-1 : index;
+            int next = index < points.Count-1 ? index+1 : index;
+
+            return JagPoint.slopeTheta(points[prev], points[next]);
         }
 
         public Boolean isEnd()
@@ -122,7 +145,10 @@ namespace DrRobot.JaguarControl
                     string[] xyt = sp.Split(',');
                     double x = Double.Parse(xyt[0]);
                     double y = Double.Parse(xyt[1]);
-                    double t = Double.Parse(xyt[2]);
+                    double t = -1;
+                    try{
+                        t = Double.Parse(xyt[2]);
+                    }catch{}
 
                     jagTraj.addPoint(new JagPoint(x, y, t));
                 }
