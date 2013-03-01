@@ -112,6 +112,7 @@
             this.button1 = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
             this.desActivate = new System.Windows.Forms.CheckBox();
+            this.LargerMap = new System.Windows.Forms.Button();
             this.groupBoxGPSIMU.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.realJaguar)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxIMUGPS)).BeginInit();
@@ -1047,12 +1048,23 @@
             this.desActivate.UseVisualStyleBackColor = true;
             this.desActivate.CheckedChanged += new System.EventHandler(this.desActivate_CheckedChanged);
             // 
+            // LargerMap
+            // 
+            this.LargerMap.Location = new System.Drawing.Point(871, 12);
+            this.LargerMap.Name = "LargerMap";
+            this.LargerMap.Size = new System.Drawing.Size(67, 23);
+            this.LargerMap.TabIndex = 74;
+            this.LargerMap.Text = "LargerMap";
+            this.LargerMap.UseVisualStyleBackColor = true;
+            this.LargerMap.Click += new System.EventHandler(this.LargerMap_Click);
+            // 
             // JaguarCtrl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ControlLight;
             this.ClientSize = new System.Drawing.Size(1016, 698);
+            this.Controls.Add(this.LargerMap);
             this.Controls.Add(this.desActivate);
             this.Controls.Add(this.button2);
             this.Controls.Add(this.button1);
@@ -1221,6 +1233,7 @@
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.Button button2;
         private System.Windows.Forms.CheckBox desActivate;
+        private System.Windows.Forms.Button LargerMap;
     }
 }
 

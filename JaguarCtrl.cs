@@ -34,6 +34,7 @@ namespace DrRobot.JaguarControl
         Point[] trackCorners = new Point[4];
 
         ParamEdit paramEdit;
+        Map largerMap;
         # endregion
 
         #region Graphics Variables
@@ -218,11 +219,47 @@ namespace DrRobot.JaguarControl
         private void JaguarCtrl_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
         {
         }
+        int myPaneWidth;
+        int myPaneHeight;
+        int myxMin;
+        int myyMin; 
+        int myxMax; 
+        int myyMax;
+        int myxCenter;
+        int myyCenter;
 
+        public JagPoint scaleToActual(int x, int y)
+        {
+            double scaledX = (double)(x - myxCenter) / mapResolution;
+            double scaledY = (double)(-y + myyCenter) / mapResolution;
+            return new JagPoint(scaledX, scaledY);
+        }
         private void Animate()
         {
-            // Create bitmap to write to            
-            Bitmap gBuffer= new Bitmap(paneWidth, paneHeight);
+            // Create bitmap to write to
+            myPaneWidth = paneWidth;
+            myPaneHeight = paneHeight;
+            myxMin = xMin; 
+            myyMin = yMin;
+            myxMax = myPaneWidth + myxMin;
+            myyMax = myPaneHeight + myyMin;
+            if (largerMap != null)
+            {
+                myPaneWidth = largerMap.Width;
+                myPaneHeight = largerMap.Height;
+                
+                myxMin = 11; 
+                myyMin = 41;
+                myxMax = myPaneWidth + myxMin;
+                myyMax = myPaneHeight + myyMin;
+            }
+            
+            int xCenter = myxMin + myPaneWidth / 2;
+            int yCenter = myyMin + myPaneHeight / 2;
+            myxCenter = xCenter;
+            myyCenter = yCenter;
+
+            Bitmap gBuffer = new Bitmap(myPaneWidth, myPaneHeight);
             using (Graphics g = Graphics.FromImage(gBuffer))
             {
                 // Smooth?
@@ -230,24 +267,24 @@ namespace DrRobot.JaguarControl
                 g.SmoothingMode = SmoothingMode.HighQuality;
 
                 // Paint background of bitmap
-                g.FillRectangle(Brushes.Black, new Rectangle(xMin, yMin, paneWidth, paneHeight));
+                g.FillRectangle(Brushes.Black, new Rectangle(myxMin, myyMin, myPaneWidth, myPaneHeight));
 
                 // Add Grid
-                int numXLines = (int)(0.5 * paneWidth / (mapResolution * cellWidth)) + 1;
-                int numYLines = (int)(0.5 * paneHeight / (mapResolution * cellWidth)) + 1;
+                int numXLines = (int)(0.5 * myPaneWidth / (mapResolution * cellWidth)) + 1;
+                int numYLines = (int)(0.5 * myPaneHeight / (mapResolution * cellWidth)) + 1;
                 for (int i = 0; i < numXLines; i++)
                 {
                     float Xp = (float)(xCenter + i * mapResolution * cellWidth);
                     float Xm = (float)(xCenter - i * mapResolution * cellWidth);
-                    g.DrawLine(goldPen, Xp, yMin, Xp, yMax);
-                    g.DrawLine(goldPen, Xm, yMin, Xm, yMax);
+                    g.DrawLine(goldPen, Xp, myyMin, Xp, myyMax);
+                    g.DrawLine(goldPen, Xm, myyMin, Xm, myyMax);
                 }
                 for (int i = 0; i < numYLines; i++)
                 {
                     float Yp = (float)(yCenter + i * mapResolution * cellWidth);
                     float Ym = (float)(yCenter - i * mapResolution * cellWidth);
-                    g.DrawLine(goldPen, xMin, Yp, xMax, Yp);
-                    g.DrawLine(goldPen, xMin, Ym, xMax, Ym);
+                    g.DrawLine(goldPen, myxMin, Yp, myxMax, Yp);
+                    g.DrawLine(goldPen, myxMin, Ym, myxMax, Ym);
                 }
 
                 // Draw Axis
@@ -297,13 +334,13 @@ namespace DrRobot.JaguarControl
                 g.FillEllipse(Brushes.LightGray, X_laser, Y_laser, laserDiameter, laserDiameter);
 
                 // Draw Trajectory
-                foreach (JagPoint p in navigation.trajectory.points)
+                for (int i = 0; i < navigation.trajectory.points.Count; i++)
                 {
                     //Draw x,y
-                    drawPoint(g, medBluePen, p);
+                    drawPoint(g, medBluePen, xCenter, yCenter, navigation.trajectory.points[i]);
                 }
 
-                drawPoint(g, medGreenPen, new JagPoint(navigation.desiredX, navigation.desiredY, navigation.desiredT));
+                drawPoint(g, medGreenPen, xCenter, yCenter, new JagPoint(navigation.desiredX, navigation.desiredY, navigation.desiredT));
 
                 // Draw Path
 
@@ -323,14 +360,27 @@ namespace DrRobot.JaguarControl
                     yPoint_tmp = yPoint;
                 }
                 
-
-
                 // Draw the bitmap to the form
-                this.CreateGraphics().DrawImageUnscaled(gBuffer, 0, 0);
+                if (largerMap != null)
+                {
+                    if (largerMap.Enabled)
+                    {
+                        try
+                        {
+                            largerMap.CreateGraphics().DrawImageUnscaled(gBuffer, 0, 0);
+                        }
+                        catch { }
+                    }
+                }
+                else
+                {
+
+                    this.CreateGraphics().DrawImageUnscaled(gBuffer, 0, 0);
+                }
             }
         }
 
-        private void drawPoint(Graphics g, Pen pen, JagPoint p)
+        private void drawPoint(Graphics g, Pen pen, int xCenter, int yCenter, JagPoint p)
         {
             //Draw x,y
             int radius = 5;
@@ -516,15 +566,22 @@ namespace DrRobot.JaguarControl
 
         //this is a "Look At" function
         private void btnSetMapCenter_Click(object sender, EventArgs e) { }
-        
+
+        public void setTrackBarZoom(int value)
+        {
+
+            mapResolution = value * zoomConstant;
+            this.Invalidate();
+        }
+
         private void trackBarZoom_Scroll(object sender, EventArgs e) 
         {
             // TrackBarZoom ranges from 1 to 100
             // MapResolution is in pixels / meters
             // Lets limit between 5x5 meters to 500x500 meters
             // so lets multiply by 5
-            mapResolution = trackBarZoom.Value*zoomConstant;
-            this.Invalidate();
+            setTrackBarZoom(trackBarZoom.Value);
+
         }
  
         #endregion
@@ -1285,6 +1342,19 @@ namespace DrRobot.JaguarControl
         {
             
         }
+
+        private void LargerMap_Click(object sender, EventArgs e)
+        {
+            largerMap = new Map(this);
+            largerMap.Show();
+            largerMap.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.resetLargerMap);
+        }
+
+        private void resetLargerMap(object sender, EventArgs e)
+        {
+            largerMap = null;
+        }
+
 
     }
 }
