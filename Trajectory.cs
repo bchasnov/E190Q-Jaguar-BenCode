@@ -33,7 +33,7 @@ namespace DrRobot.JaguarControl
 
         public String ToString()
         {
-            return "x: " + x + "y: " + y;
+            return String.Format("{0:0.00}", x) + "," + String.Format("{0:0.00}", y) + "," + String.Format("{0:0.00}", theta);
         }
 
         static public double distanceBetween(JagPoint a, JagPoint b)
@@ -68,6 +68,11 @@ namespace DrRobot.JaguarControl
    + "-2.999999999,7.09608E-05,4.712319;-1.500081938,-2.598028903,5.759508667;1.499897576,-2.598135343,6.806698333;3,0,1.57075";
 
         public static String squareTrajStr = "3,3;3,-3;-3,-3;-3,3;3,3;3,-3;-3,-3;-3,3";
+
+        public static String straightTrajStr = "1,0,0;2,0,0;3,0,0;4,0,0";
+
+        public static String map1 = "1.00,0.00,0.00;2.00,0.00,0.00;3.00,0.00,0.00;4.00,0.00,0.00;4.83,0.47,0.79;5.11,1.17,1.49;4.92,1.97,2.65;3.86,2.25,-3.06;2.78,2.08,2.86;2.00,2.14,3.14;0.94,2.17,3.08;-0.31,2.22,3.06;-0.94,2.50,1.75;-1.03,3.17,0.84;-0.50,3.56,0.05;0.58,3.58,-0.24;1.67,3.39,-0.05;2.75,3.33,0.00;3.92,3.33,-0.05;4.92,3.25,-0.57;5.56,2.72,-1.07;5.86,2.11,-1.33;5.94,1.36,-1.75;5.81,0.53,-1.64";
+        public static String esss = "0,0,0;0.5,0,-0.01;1,0.02,-0.01;1.54,0.02,-0.01;2,0,0.02;2.48,0.04,0.53;2.77,0.78,1.69;2.63,1.76,2.8;1.98,2.02,3.14;1.42,2.02,3.14;0.89,2.02,3.14";
 
         public List<JagPoint> points;
         int index = 0;
@@ -108,6 +113,16 @@ namespace DrRobot.JaguarControl
             int next = index < points.Count-1 ? index+1 : index;
 
             return JagPoint.slopeTheta(points[prev], points[next]);
+        }
+
+        public String getMap()
+        {
+            String str = "";
+            foreach (JagPoint point in points)
+            {
+                str += point.ToString() + ";";
+            }
+            return str;
         }
 
         public Boolean isEnd()

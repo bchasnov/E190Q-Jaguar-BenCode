@@ -121,6 +121,7 @@
     <Compile Include="Trajectory.cs" />
     <EmbeddedResource Include="DrRobotRobotConnection.resx">
       <DependentUpon>DrRobotRobotConnection.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="JaguarCtrl.resx">
       <DependentUpon>JaguarCtrl.cs</DependentUpon>

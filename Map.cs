@@ -45,11 +45,17 @@ namespace DrRobot.JaguarControl
         private void trackBar1_Scroll(object sender, EventArgs e)
         {
             jaguarControl.setTrackBarZoom(trackBar1.Value);
+            mapScale.Text = trackBar1.Value.ToString();
         }
 
         private void Map_Load(object sender, EventArgs e)
         {
 
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            Console.WriteLine(jaguarControl.navigation.trajectory.getMap());
         }
     }
 }
