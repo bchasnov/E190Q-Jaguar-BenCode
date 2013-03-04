@@ -82,7 +82,6 @@
             this.lblTemp4 = new System.Windows.Forms.Label();
             this.lblTemp2 = new System.Windows.Forms.Label();
             this.lblTemp1 = new System.Windows.Forms.Label();
-            this.btnSetMapCenter = new System.Windows.Forms.Button();
             this.tmrJoyStickPoll = new System.Windows.Forms.Timer(this.components);
             this.trackBarTurnPower = new System.Windows.Forms.TrackBar();
             this.trackBarForwardPower = new System.Windows.Forms.TrackBar();
@@ -109,10 +108,9 @@
             this.label16 = new System.Windows.Forms.Label();
             this.desiredT = new System.Windows.Forms.Label();
             this.txtStartTheta = new System.Windows.Forms.TextBox();
-            this.button1 = new System.Windows.Forms.Button();
-            this.button2 = new System.Windows.Forms.Button();
-            this.desActivate = new System.Windows.Forms.CheckBox();
-            this.LargerMap = new System.Windows.Forms.Button();
+            this.txtNumParticles = new System.Windows.Forms.TextBox();
+            this.label19 = new System.Windows.Forms.Label();
+            this.checkBoxKnownStart = new System.Windows.Forms.CheckBox();
             this.groupBoxGPSIMU.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.realJaguar)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxIMUGPS)).BeginInit();
@@ -559,18 +557,18 @@
             // txtStartLong
             // 
             this.txtStartLong.Font = new System.Drawing.Font("Arial", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtStartLong.Location = new System.Drawing.Point(142, 427);
+            this.txtStartLong.Location = new System.Drawing.Point(134, 426);
             this.txtStartLong.Name = "txtStartLong";
-            this.txtStartLong.Size = new System.Drawing.Size(41, 20);
+            this.txtStartLong.Size = new System.Drawing.Size(47, 20);
             this.txtStartLong.TabIndex = 29;
             this.txtStartLong.Text = "0";
             // 
             // txtStartLat
             // 
             this.txtStartLat.Font = new System.Drawing.Font("Arial", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtStartLat.Location = new System.Drawing.Point(63, 427);
+            this.txtStartLat.Location = new System.Drawing.Point(44, 426);
             this.txtStartLat.Name = "txtStartLat";
-            this.txtStartLat.Size = new System.Drawing.Size(36, 20);
+            this.txtStartLat.Size = new System.Drawing.Size(45, 20);
             this.txtStartLat.TabIndex = 28;
             this.txtStartLat.Text = "0";
             // 
@@ -578,7 +576,7 @@
             // 
             this.label11.Font = new System.Drawing.Font("Arial", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label11.ForeColor = System.Drawing.Color.Black;
-            this.label11.Location = new System.Drawing.Point(105, 428);
+            this.label11.Location = new System.Drawing.Point(97, 427);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(59, 18);
             this.label11.TabIndex = 27;
@@ -589,7 +587,7 @@
             // 
             this.label12.Font = new System.Drawing.Font("Arial", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label12.ForeColor = System.Drawing.Color.Black;
-            this.label12.Location = new System.Drawing.Point(26, 428);
+            this.label12.Location = new System.Drawing.Point(7, 427);
             this.label12.Name = "label12";
             this.label12.Size = new System.Drawing.Size(61, 18);
             this.label12.TabIndex = 26;
@@ -599,11 +597,11 @@
             // btnSetStartPoint
             // 
             this.btnSetStartPoint.Font = new System.Drawing.Font("Arial", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnSetStartPoint.Location = new System.Drawing.Point(343, 425);
+            this.btnSetStartPoint.Location = new System.Drawing.Point(394, 426);
             this.btnSetStartPoint.Name = "btnSetStartPoint";
-            this.btnSetStartPoint.Size = new System.Drawing.Size(68, 25);
+            this.btnSetStartPoint.Size = new System.Drawing.Size(90, 25);
             this.btnSetStartPoint.TabIndex = 25;
-            this.btnSetStartPoint.Text = "FlyToSetPt";
+            this.btnSetStartPoint.Text = "FlyToSetPoint";
             this.btnSetStartPoint.UseVisualStyleBackColor = true;
             this.btnSetStartPoint.Click += new System.EventHandler(this.btnSetStartPoint_Click);
             // 
@@ -654,7 +652,6 @@
             this.lblEncoderPos4.TabIndex = 34;
             this.lblEncoderPos4.Text = "0";
             this.lblEncoderPos4.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.lblEncoderPos4.Click += new System.EventHandler(this.lblEncoderPos4_Click);
             // 
             // lblVel4
             // 
@@ -667,7 +664,6 @@
             this.lblVel4.TabIndex = 38;
             this.lblVel4.Text = "0";
             this.lblVel4.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.lblVel4.Click += new System.EventHandler(this.lblVel4_Click);
             // 
             // lblVel2
             // 
@@ -680,7 +676,6 @@
             this.lblVel2.TabIndex = 36;
             this.lblVel2.Text = "0";
             this.lblVel2.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.lblVel2.Click += new System.EventHandler(this.lblVel2_Click);
             // 
             // lblVel1
             // 
@@ -729,17 +724,6 @@
             this.lblTemp1.TabIndex = 39;
             this.lblTemp1.Text = "0";
             this.lblTemp1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // btnSetMapCenter
-            // 
-            this.btnSetMapCenter.Font = new System.Drawing.Font("Arial", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnSetMapCenter.Location = new System.Drawing.Point(417, 426);
-            this.btnSetMapCenter.Name = "btnSetMapCenter";
-            this.btnSetMapCenter.Size = new System.Drawing.Size(68, 25);
-            this.btnSetMapCenter.TabIndex = 44;
-            this.btnSetMapCenter.Text = "SaveSetPt";
-            this.btnSetMapCenter.UseVisualStyleBackColor = true;
-            this.btnSetMapCenter.Click += new System.EventHandler(this.btnSetMapCenter_Click);
             // 
             // tmrJoyStickPoll
             // 
@@ -836,7 +820,7 @@
             this.checkBoxMotorProtect.Checked = true;
             this.checkBoxMotorProtect.CheckState = System.Windows.Forms.CheckState.Checked;
             this.checkBoxMotorProtect.ForeColor = System.Drawing.Color.Black;
-            this.checkBoxMotorProtect.Location = new System.Drawing.Point(638, 454);
+            this.checkBoxMotorProtect.Location = new System.Drawing.Point(638, 447);
             this.checkBoxMotorProtect.Name = "checkBoxMotorProtect";
             this.checkBoxMotorProtect.Size = new System.Drawing.Size(90, 17);
             this.checkBoxMotorProtect.TabIndex = 55;
@@ -848,7 +832,7 @@
             // 
             this.label5.Font = new System.Drawing.Font("Arial", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label5.ForeColor = System.Drawing.Color.Black;
-            this.label5.Location = new System.Drawing.Point(650, 475);
+            this.label5.Location = new System.Drawing.Point(650, 479);
             this.label5.Margin = new System.Windows.Forms.Padding(0);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(76, 24);
@@ -858,7 +842,7 @@
             // 
             // pictureBoxStuckDetect
             // 
-            this.pictureBoxStuckDetect.Location = new System.Drawing.Point(638, 482);
+            this.pictureBoxStuckDetect.Location = new System.Drawing.Point(638, 486);
             this.pictureBoxStuckDetect.Name = "pictureBoxStuckDetect";
             this.pictureBoxStuckDetect.Size = new System.Drawing.Size(15, 10);
             this.pictureBoxStuckDetect.TabIndex = 57;
@@ -1001,7 +985,7 @@
             // 
             this.desiredT.Font = new System.Drawing.Font("Arial", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.desiredT.ForeColor = System.Drawing.Color.Black;
-            this.desiredT.Location = new System.Drawing.Point(188, 428);
+            this.desiredT.Location = new System.Drawing.Point(189, 427);
             this.desiredT.Name = "desiredT";
             this.desiredT.Size = new System.Drawing.Size(59, 18);
             this.desiredT.TabIndex = 69;
@@ -1011,52 +995,45 @@
             // txtStartTheta
             // 
             this.txtStartTheta.Font = new System.Drawing.Font("Arial", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtStartTheta.Location = new System.Drawing.Point(224, 427);
+            this.txtStartTheta.Location = new System.Drawing.Point(224, 426);
             this.txtStartTheta.Name = "txtStartTheta";
             this.txtStartTheta.Size = new System.Drawing.Size(47, 20);
             this.txtStartTheta.TabIndex = 70;
             this.txtStartTheta.Text = "0";
             // 
-            // button1
+            // txtNumParticles
             // 
-            this.button1.Location = new System.Drawing.Point(944, 12);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(67, 23);
-            this.button1.TabIndex = 71;
-            this.button1.Text = "ParamEdit";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.txtNumParticles.Font = new System.Drawing.Font("Arial", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtNumParticles.Location = new System.Drawing.Point(341, 427);
+            this.txtNumParticles.Name = "txtNumParticles";
+            this.txtNumParticles.Size = new System.Drawing.Size(47, 20);
+            this.txtNumParticles.TabIndex = 71;
+            this.txtNumParticles.Text = "1000";
             // 
-            // button2
+            // label19
             // 
-            this.button2.Font = new System.Drawing.Font("Arial", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.button2.Location = new System.Drawing.Point(273, 425);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(64, 25);
-            this.button2.TabIndex = 72;
-            this.button2.Text = "TrackTraj";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.button2_Click);
+            this.label19.Font = new System.Drawing.Font("Arial", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label19.ForeColor = System.Drawing.Color.Black;
+            this.label19.Location = new System.Drawing.Point(303, 428);
+            this.label19.Name = "label19";
+            this.label19.Size = new System.Drawing.Size(59, 18);
+            this.label19.TabIndex = 72;
+            this.label19.Text = "Num P:";
+            this.label19.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // desActivate
+            // checkBoxKnownStart
             // 
-            this.desActivate.AutoSize = true;
-            this.desActivate.Location = new System.Drawing.Point(6, 430);
-            this.desActivate.Name = "desActivate";
-            this.desActivate.Size = new System.Drawing.Size(15, 14);
-            this.desActivate.TabIndex = 73;
-            this.desActivate.UseVisualStyleBackColor = true;
-            this.desActivate.CheckedChanged += new System.EventHandler(this.desActivate_CheckedChanged);
-            // 
-            // LargerMap
-            // 
-            this.LargerMap.Location = new System.Drawing.Point(871, 12);
-            this.LargerMap.Name = "LargerMap";
-            this.LargerMap.Size = new System.Drawing.Size(67, 23);
-            this.LargerMap.TabIndex = 74;
-            this.LargerMap.Text = "LargerMap";
-            this.LargerMap.UseVisualStyleBackColor = true;
-            this.LargerMap.Click += new System.EventHandler(this.LargerMap_Click);
+            this.checkBoxKnownStart.AutoSize = true;
+            this.checkBoxKnownStart.Checked = true;
+            this.checkBoxKnownStart.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxKnownStart.ForeColor = System.Drawing.Color.Black;
+            this.checkBoxKnownStart.Location = new System.Drawing.Point(638, 465);
+            this.checkBoxKnownStart.Name = "checkBoxKnownStart";
+            this.checkBoxKnownStart.Size = new System.Drawing.Size(105, 17);
+            this.checkBoxKnownStart.TabIndex = 73;
+            this.checkBoxKnownStart.Text = "Known Start Loc";
+            this.checkBoxKnownStart.UseVisualStyleBackColor = true;
+            this.checkBoxKnownStart.CheckStateChanged += new System.EventHandler(this.checkBoxKnownStart_CheckedChanged);
             // 
             // JaguarCtrl
             // 
@@ -1064,10 +1041,8 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ControlLight;
             this.ClientSize = new System.Drawing.Size(1016, 698);
-            this.Controls.Add(this.LargerMap);
-            this.Controls.Add(this.desActivate);
-            this.Controls.Add(this.button2);
-            this.Controls.Add(this.button1);
+            this.Controls.Add(this.txtNumParticles);
+            this.Controls.Add(this.label19);
             this.Controls.Add(this.txtStartTheta);
             this.Controls.Add(this.desiredT);
             this.Controls.Add(this.lblTemp4);
@@ -1083,6 +1058,7 @@
             this.Controls.Add(this.pictureBox2);
             this.Controls.Add(this.buttonReset);
             this.Controls.Add(this.checkBoxHardware);
+            this.Controls.Add(this.checkBoxKnownStart);
             this.Controls.Add(this.pictureBoxStuckDetect);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.checkBoxMotorProtect);
@@ -1090,7 +1066,6 @@
             this.Controls.Add(this.label4);
             this.Controls.Add(this.btnLaserScan);
             this.Controls.Add(this.trackBarTurnPower);
-            this.Controls.Add(this.btnSetMapCenter);
             this.Controls.Add(this.trackBarForwardPower);
             this.Controls.Add(this.lblTemp1);
             this.Controls.Add(this.lblMot3);
@@ -1199,7 +1174,6 @@
         private System.Windows.Forms.Label lblTemp2;
         private System.Windows.Forms.Label lblTemp1;
         private System.Windows.Forms.Label lblBatVol;
-        private System.Windows.Forms.Button btnSetMapCenter;
         private System.Windows.Forms.Timer tmrJoyStickPoll;
         private System.Windows.Forms.TrackBar trackBarTurnPower;
         private System.Windows.Forms.TrackBar trackBarForwardPower;
@@ -1230,10 +1204,9 @@
         private System.Windows.Forms.Label label16;
         private System.Windows.Forms.Label desiredT;
         public System.Windows.Forms.TextBox txtStartTheta;
-        private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.Button button2;
-        private System.Windows.Forms.CheckBox desActivate;
-        private System.Windows.Forms.Button LargerMap;
+        public System.Windows.Forms.TextBox txtNumParticles;
+        private System.Windows.Forms.Label label19;
+        private System.Windows.Forms.CheckBox checkBoxKnownStart;
     }
 }
 

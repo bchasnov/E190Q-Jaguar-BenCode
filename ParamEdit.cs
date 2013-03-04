@@ -30,7 +30,8 @@ namespace DrRobot.JaguarControl
             TextBox txt = sender as TextBox;
             if (txt != null)
             {
-                jaguar.navigation.K_p = Double.Parse(txt.Text);
+                jaguar.navigation.K_P = Double.Parse(txt.Text);
+                jaguar.navigation.InitiateVelControl();
             }
         }
 
@@ -41,9 +42,9 @@ namespace DrRobot.JaguarControl
 
         private void button1_Click(object sender, EventArgs e)
         {
-            K_p.Text = jaguar.navigation.K_p.ToString();
-            K_i.Text = jaguar.navigation.K_i.ToString();
-            K_d.Text = jaguar.navigation.K_d.ToString();
+            K_p.Text = jaguar.navigation.K_P.ToString();
+            K_i.Text = jaguar.navigation.K_I.ToString();
+            K_d.Text = jaguar.navigation.K_D.ToString();
             Kalpha.Text = jaguar.navigation.Kalpha.ToString();
             Kpho.Text = jaguar.navigation.Kpho.ToString();
             Kbeta.Text = jaguar.navigation.Kbeta.ToString();
@@ -89,6 +90,63 @@ namespace DrRobot.JaguarControl
             if (txt != null)
             {
                 jaguar.navigation.trajThresh = Double.Parse(txt.Text);
+            }
+        }
+
+        private void textBox7_TextChanged(object sender, EventArgs e)
+        {
+            TextBox txt = sender as TextBox;
+            if (txt != null)
+            {
+                jaguar.navigation.msR = (short)Double.Parse(txt.Text);
+            }
+        }
+
+        private void label8_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void K_i_TextChanged(object sender, EventArgs e)
+        {
+            TextBox txt = sender as TextBox;
+            if (txt != null)
+            {
+                jaguar.navigation.K_I = Double.Parse(txt.Text);
+                jaguar.navigation.InitiateVelControl();
+            }
+        }
+
+        private void K_d_TextChanged(object sender, EventArgs e)
+        {
+            TextBox txt = sender as TextBox;
+            if (txt != null)
+            {
+                jaguar.navigation.K_D = Double.Parse(txt.Text);
+                jaguar.navigation.InitiateVelControl();
+            }
+        }
+
+        private void msL_TextChanged(object sender, EventArgs e)
+        {
+            TextBox txt = sender as TextBox;
+            if (txt != null)
+            {
+                jaguar.navigation.msL = (short)Double.Parse(txt.Text);
+                jaguar.navigation.InitiateVelControl();
+            }
+        }
+
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+            CheckBox cb = sender as CheckBox;
+            if (cb.Checked)
+            {
+                jaguar.navigation.overrideMotorSignals = true;
+            }
+            else
+            {
+                jaguar.navigation.overrideMotorSignals = false;
             }
         }
 

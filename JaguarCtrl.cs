@@ -22,7 +22,7 @@ namespace DrRobot.JaguarControl
         # region Form Variables
         DrRobotRobotConnection drRobotConnect = null;
         public RobotConfig robotCfg = null;
-        public Navigation navigation = null;
+        Navigation navigation = null;
 
         public RobotConfig.RobotConfigTableRow jaguarSetting = null;
         private const string configFile = "c:\\DrRobotAppFile\\OutDoorRobotConfig.xml";
@@ -32,9 +32,9 @@ namespace DrRobot.JaguarControl
         double[] robotTrackAngles = { Math.PI / 4, Math.PI - Math.PI / 4, Math.PI + Math.PI / 4, -Math.PI / 4 };
         Point[] robotCorners = new Point[4];
         Point[] trackCorners = new Point[4];
-
-        ParamEdit paramEdit;
-        Map largerMap;
+        public int KNOWN = 0;
+        public int UNKNOWN = 1;
+        public int startMode = 0;
         # endregion
 
         #region Graphics Variables
@@ -54,10 +54,11 @@ namespace DrRobot.JaguarControl
         private static Pen blackPen = new Pen(Color.Black, 1);
         private static Pen whitePen = new Pen(Color.White, 10);
         private static Pen thinWhitePen = new Pen(Color.White, 1);
-        private static Pen medBluePen = new Pen(Color.LightBlue, 3);
-        private static Pen medGreenPen = new Pen(Color.FromArgb(0,255,0), 3);
         private static Pen goldPen = new Pen(Color.Gold, 1);
         private static Pen trackPen = new Pen(Brushes.LightGray);
+        private static Pen wallPen = new Pen(Brushes.LightGray, 4);
+        private static Pen particlePen = new Pen(Brushes.Red, 1);
+        private static Pen estimatePen = new Pen(Brushes.Blue, 2);
         private static double cellWidth = 1.0; // in meters, mapResolution is in metersToPixels
         #endregion
 
@@ -150,9 +151,6 @@ namespace DrRobot.JaguarControl
         public int MANUAL = 0;
         public int AUTONOMOUS = 1;
         public int controlMode = 0;
-        public int AUTO_TRACKTRAJ = 0;
-        public int AUTO_TRACKSETPOINT = 1;
-        public int autoMode = 0;
         private Thread sensorThread;
         public bool runSensorThread;
         #endregion
@@ -219,47 +217,11 @@ namespace DrRobot.JaguarControl
         private void JaguarCtrl_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
         {
         }
-        int myPaneWidth;
-        int myPaneHeight;
-        int myxMin;
-        int myyMin; 
-        int myxMax; 
-        int myyMax;
-        int myxCenter;
-        int myyCenter;
 
-        public JagPoint scaleToActual(int x, int y)
-        {
-            double scaledX = (double)(x - myxCenter) / mapResolution;
-            double scaledY = (double)(-y + myyCenter) / mapResolution;
-            return new JagPoint(scaledX, scaledY);
-        }
         private void Animate()
         {
-            // Create bitmap to write to
-            myPaneWidth = paneWidth;
-            myPaneHeight = paneHeight;
-            myxMin = xMin; 
-            myyMin = yMin;
-            myxMax = myPaneWidth + myxMin;
-            myyMax = myPaneHeight + myyMin;
-            if (largerMap != null)
-            {
-                myPaneWidth = largerMap.Width;
-                myPaneHeight = largerMap.Height;
-                
-                myxMin = 11; 
-                myyMin = 41;
-                myxMax = myPaneWidth + myxMin;
-                myyMax = myPaneHeight + myyMin;
-            }
-            
-            int xCenter = myxMin + myPaneWidth / 2;
-            int yCenter = myyMin + myPaneHeight / 2;
-            myxCenter = xCenter;
-            myyCenter = yCenter;
-
-            Bitmap gBuffer = new Bitmap(myPaneWidth, myPaneHeight);
+            // Create bitmap to write to            
+            Bitmap gBuffer= new Bitmap(paneWidth, paneHeight);
             using (Graphics g = Graphics.FromImage(gBuffer))
             {
                 // Smooth?
@@ -267,24 +229,24 @@ namespace DrRobot.JaguarControl
                 g.SmoothingMode = SmoothingMode.HighQuality;
 
                 // Paint background of bitmap
-                g.FillRectangle(Brushes.Black, new Rectangle(myxMin, myyMin, myPaneWidth, myPaneHeight));
+                g.FillRectangle(Brushes.Black, new Rectangle(xMin, yMin, paneWidth, paneHeight));
 
                 // Add Grid
-                int numXLines = (int)(0.5 * myPaneWidth / (mapResolution * cellWidth)) + 1;
-                int numYLines = (int)(0.5 * myPaneHeight / (mapResolution * cellWidth)) + 1;
+                int numXLines = (int)(0.5 * paneWidth / (mapResolution * cellWidth)) + 1;
+                int numYLines = (int)(0.5 * paneHeight / (mapResolution * cellWidth)) + 1;
                 for (int i = 0; i < numXLines; i++)
                 {
                     float Xp = (float)(xCenter + i * mapResolution * cellWidth);
                     float Xm = (float)(xCenter - i * mapResolution * cellWidth);
-                    g.DrawLine(goldPen, Xp, myyMin, Xp, myyMax);
-                    g.DrawLine(goldPen, Xm, myyMin, Xm, myyMax);
+                    g.DrawLine(goldPen, Xp, yMin, Xp, yMax);
+                    g.DrawLine(goldPen, Xm, yMin, Xm, yMax);
                 }
                 for (int i = 0; i < numYLines; i++)
                 {
                     float Yp = (float)(yCenter + i * mapResolution * cellWidth);
                     float Ym = (float)(yCenter - i * mapResolution * cellWidth);
-                    g.DrawLine(goldPen, myxMin, Yp, myxMax, Yp);
-                    g.DrawLine(goldPen, myxMin, Ym, myxMax, Ym);
+                    g.DrawLine(goldPen, xMin, Yp, xMax, Yp);
+                    g.DrawLine(goldPen, xMin, Ym, xMax, Ym);
                 }
 
                 // Draw Axis
@@ -333,69 +295,36 @@ namespace DrRobot.JaguarControl
                 int Y_laser = (int)(yCenter - yShift - laserDiagonal * Math.Sin(navigation.t) - laserDiameter / 2);
                 g.FillEllipse(Brushes.LightGray, X_laser, Y_laser, laserDiameter, laserDiameter);
 
-                // Draw Trajectory
-                for (int i = 0; i < navigation.trajectory.points.Count; i++)
+                // Draw Walls
+                for (int w = 0; w < navigation.map.numMapSegments; w++)
                 {
-                    //Draw x,y
-                    drawPoint(g, medBluePen, xCenter, yCenter, navigation.trajectory.points[i]);
+                    g.DrawLine(wallPen, (float)(xCenter + mapResolution * navigation.map.mapSegmentCorners[w, 0, 0]), 
+                        (float)(yCenter - mapResolution * navigation.map.mapSegmentCorners[w, 0, 1]),
+                        (float)(xCenter + mapResolution * navigation.map.mapSegmentCorners[w, 1, 0]),
+                        (float)(yCenter - mapResolution * navigation.map.mapSegmentCorners[w, 1, 1]));
+
                 }
 
-                drawPoint(g, medGreenPen, xCenter, yCenter, new JagPoint(navigation.desiredX, navigation.desiredY, navigation.desiredT));
-
-                // Draw Path
-
-                JagPoint prev_p = navigation.breadCrumbs.points[0];
-
-                int xPoint_tmp = (int)(prev_p.x * mapResolution);
-                int yPoint_tmp = (int)(prev_p.y * mapResolution);
-                for ( int i = 1; i < navigation.breadCrumbs.points.Count; i++)
+                // Draw Particles
+                int partSize = (int)(0.16*mapResolution);
+                int partHalfSize = (int)(0.08 * mapResolution);
+                for (int p = 0; p < navigation.numParticles; p++)
                 {
-                    JagPoint p = navigation.breadCrumbs.points[i];
-                    int xPoint = (int)(p.x * mapResolution);
-                    int yPoint = (int)(p.y * mapResolution);
-                    //if (xPoint_tmp == xPoint && yPoint_tmp == yPoint) break;
-
-                    g.DrawLine(thinWhitePen, xCenter + xPoint_tmp, yCenter - yPoint_tmp, xCenter + xPoint, yCenter - yPoint);
-                    xPoint_tmp = xPoint;
-                    yPoint_tmp = yPoint;
+                    g.DrawPie(particlePen, (int)(xCenter -partHalfSize + mapResolution * navigation.particles[p].x), (int)(yCenter - partHalfSize - mapResolution * navigation.particles[p].y), partSize, partSize, (int)(-navigation.particles[p].t * 180 / 3.14 - 180 - 25), 50);
                 }
-                
+
+
+                // Draw State Estimate
+                g.DrawPie(estimatePen, (int)(xCenter - partHalfSize + mapResolution * navigation.x_est), (int)(yCenter - partHalfSize - mapResolution * navigation.y_est), partSize, partSize, (int)(-navigation.t_est * 180 / 3.14 - 180 - 25), 50);
+
+                // Paint background of bitmap
+                g.FillRectangle(Brushes.LightGray, new Rectangle(xMin - 40, yMin, 40, paneHeight));
+
                 // Draw the bitmap to the form
-                if (largerMap != null)
-                {
-                    if (largerMap.Enabled)
-                    {
-                        try
-                        {
-                            largerMap.CreateGraphics().DrawImageUnscaled(gBuffer, 0, 0);
-                        }
-                        catch { }
-                    }
-                }
-                else
-                {
-
-                    this.CreateGraphics().DrawImageUnscaled(gBuffer, 0, 0);
-                }
+                this.CreateGraphics().DrawImageUnscaled(gBuffer, 0, 0);
             }
         }
-
-        private void drawPoint(Graphics g, Pen pen, int xCenter, int yCenter, JagPoint p)
-        {
-            //Draw x,y
-            int radius = 5;
-            int xPoint = (int)(p.x * mapResolution);
-            int yPoint = (int)(p.y * mapResolution);
-            g.DrawEllipse(pen, new Rectangle(xCenter + xPoint - radius, yCenter - yPoint - radius, 2 * radius, 2 * radius));
-
-            //Draw theta
-            if (p.hasTheta())
-            {
-                int dy = (int)(3 * radius * Math.Sin(p.theta));
-                int dx = (int)(3 * radius * Math.Cos(p.theta));
-                g.DrawLine(pen, xCenter + xPoint, yCenter - yPoint, xCenter + xPoint + dx, yCenter - yPoint - dy);
-            }
-        }
+        
 
         private void JaguarCtrl_Shown(object sender, EventArgs e)
         {
@@ -566,22 +495,15 @@ namespace DrRobot.JaguarControl
 
         //this is a "Look At" function
         private void btnSetMapCenter_Click(object sender, EventArgs e) { }
-
-        public void setTrackBarZoom(int value)
-        {
-
-            mapResolution = value * zoomConstant;
-            this.Invalidate();
-        }
-
+        
         private void trackBarZoom_Scroll(object sender, EventArgs e) 
         {
             // TrackBarZoom ranges from 1 to 100
             // MapResolution is in pixels / meters
             // Lets limit between 5x5 meters to 500x500 meters
             // so lets multiply by 5
-            setTrackBarZoom(trackBarZoom.Value);
-
+            mapResolution = Math.Max(1,Math.Min(90,trackBarZoom.Value))*zoomConstant;
+            this.Invalidate();
         }
  
         #endregion
@@ -622,12 +544,6 @@ namespace DrRobot.JaguarControl
             lblEncoderPos4.Text = navigation.x.ToString();
             lblVel4.Text = navigation.y.ToString();
             lblTemp4.Text = navigation.t.ToString();
-            if (!desActivate.Checked)
-            {
-                txtStartTheta.Text = navigation.desiredT.ToString();
-                txtStartLong.Text = navigation.desiredY.ToString();
-                txtStartLat.Text = navigation.desiredX.ToString();
-            }
         }
 
         private void UpdateFormEncoderData()
@@ -1278,6 +1194,17 @@ namespace DrRobot.JaguarControl
             navigation.Reset();
         }
 
+        private void checkBoxKnownStart_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBoxKnownStart.Checked)
+            {
+                startMode = KNOWN;
+            }
+            else
+                startMode = UNKNOWN;
+            
+        }
+
         private void btnTurnOn_Click(object sender, EventArgs e)
         {
             if (clientSocketLaser != null)
@@ -1290,6 +1217,7 @@ namespace DrRobot.JaguarControl
         
         private void btnReset_Click(object sender, EventArgs e)
         {
+            navigation.numParticles = int.Parse(txtNumParticles.Text);
             navigation.Reset();
         }
         
@@ -1305,56 +1233,10 @@ namespace DrRobot.JaguarControl
             {
             }
             controlMode = AUTONOMOUS;
-            autoMode = AUTO_TRACKSETPOINT;
+            //autoMode = AUTO_TRACKSETPOINT;
         }
 
         # endregion
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-            paramEdit = new ParamEdit(this);
-            paramEdit.Show();
-        }
-
-        private void lblVel2_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void button2_Click(object sender, EventArgs e)
-        {
-
-            controlMode = AUTONOMOUS;
-            autoMode = AUTO_TRACKTRAJ;
-        }
-
-        private void lblEncoderPos4_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void lblVel4_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void desActivate_CheckedChanged(object sender, EventArgs e)
-        {
-            
-        }
-
-        private void LargerMap_Click(object sender, EventArgs e)
-        {
-            largerMap = new Map(this);
-            largerMap.Show();
-            largerMap.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.resetLargerMap);
-        }
-
-        private void resetLargerMap(object sender, EventArgs e)
-        {
-            largerMap = null;
-        }
-
 
     }
 }

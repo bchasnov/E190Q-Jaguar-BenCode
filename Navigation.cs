@@ -16,8 +16,6 @@ namespace DrRobot.JaguarControl
         public double x_est, y_est, t_est;
         public double desiredX, desiredY, desiredT;
 
-        public double aa, bb, cc, dd, ee;
-
         public double currentEncoderPulseL, currentEncoderPulseR;
         public double lastEncoderPulseL, lastEncoderPulseR;
         public double wheelDistanceR, wheelDistanceL;
@@ -49,23 +47,18 @@ namespace DrRobot.JaguarControl
         private double angleTravelled, distanceTravelled;
         private double diffEncoderPulseL, diffEncoderPulseR;
         private double maxVelocity = 0.25;
-        public double Kpho = 0.2;//1;
-        public double Kalpha = 0.5;//2;//8
-        public double Kbeta = -0.1;//-0.5;//-0.5//-1.0;
+        private double Kpho = 1;
+        private double Kalpha = 2;//8
+        private double Kbeta = -0.5;//-0.5//-1.0;
         const double alphaTrackingAccuracy = 0.10;
         const double betaTrackingAccuracy = 0.1;
         const double phoTrackingAccuracy = 0.10;
         double time = 0;
         DateTime startTime;
 
-        public double K_P = 1;//15;
-        public double K_I = 0;//0;
-        public double K_D = 3;//3;
-
-        public double K_p = 25;//15;
-        public double K_i = 0;//0;
-        public double K_d = 0;//3;
-
+        public short K_P = 15;//15;
+        public short K_I = 0;//0;
+        public short K_D = 3;//3;
         public short frictionComp = 8750;//8750;
         public double e_sum_R, e_sum_L;
         public double u_R = 0;
@@ -73,13 +66,35 @@ namespace DrRobot.JaguarControl
         public double e_R = 0;
         public double e_L = 0;
 
+        public double rotRateL, rotRateR;
+        public double K_p, K_i, K_d, maxErr;
+
         public double accCalib_x = 18;
         public double accCalib_y = 4;
 
-        public JagTrajectory trajectory;
-        public JagPath breadCrumbs;
-        public int breadCrumbsInterval = 200;
-        public int breadCrumbsCount = 0;
+        // PF Variables
+        public Map map;
+        public Particle[] particles;
+        public Particle[] propagatedParticles;
+        public int numParticles = 1000;
+        public double K_wheelRandomness = 0.15;//0.25
+        public Random random = new Random();
+        public bool newLaserData = false;
+        public double laserMaxRange = 4.0;
+        public double laserMinRange = 0.2;
+        public double[] laserAngles;
+        private int laserCounter;
+        private int laserStepSize = 3;
+
+        public class Particle
+        {
+            public double x, y, t, w;
+
+            public Particle()
+            {
+            }
+        }
+
         #endregion
 
 
@@ -92,6 +107,16 @@ namespace DrRobot.JaguarControl
             jaguarControl = jc;
             realJaguar = jc.realJaguar;
             simulatedJaguar = jc.simulatedJaguar;
+            map = new Map();
+            particles = new Particle[numParticles];
+            propagatedParticles = new Particle[numParticles];
+            // Create particles
+            for (int i = 0; i < numParticles; i++)
+            {
+                particles[i] = new Particle();
+                propagatedParticles[i] = new Particle();
+            }
+
             this.Initialize();
 
 
@@ -129,7 +154,7 @@ namespace DrRobot.JaguarControl
             loggingOn = false;
 
             // Set random start for particles
-            //InitializeParticles();
+            InitializeParticles();
 
             // Set default to no motionPlanRequired
             motionPlanRequired = false;
@@ -140,25 +165,10 @@ namespace DrRobot.JaguarControl
             displayNodes = true;
             displaySimRobot = true;
 
-            aa = 0;
-            bb = 0;
-            cc = 0;
-            dd = 0;
-            ee = 0;
+            laserAngles = new double[LaserData.Length];
+            for (int i = 0; i < LaserData.Length; i++)                
+                laserAngles[i] = DrRobot.JaguarControl.JaguarCtrl.startAng + DrRobot.JaguarControl.JaguarCtrl.stepAng * i;
 
-            trajectory = new JagTrajectory();
-            /*
-            trajectory.addPoint(new jagPoint(1, 1, 1));
-            trajectory.addPoint(new jagPoint(2, 2, 1));
-            trajectory.addPoint(new jagPoint(3, 3, 1));
-            trajectory.addPoint(new jagPoint(4, 4, 1));
-            trajectory.addPoint(new jagPoint(4, 5, 1));*/
-            trajectory = JagTrajectory.parseTxt(JagTrajectory.circleTrajStr);
-            hasStartedTrackingTrajectory = false;
-
-            breadCrumbs = new JagPath();
-            breadCrumbs.addPoint(new JagPoint(x, y, t));
-            breadCrumbsCount = 0;
         }
 
         // This function is called from the dialogue window "Reset Button"
@@ -228,20 +238,9 @@ namespace DrRobot.JaguarControl
                         motionPlanRequired = false;
                     }
 
-                    // Drive the robot to 1meter from the wall. Otherwise, comment it out after lab 1. 
-                    //WallPositioning();
-
                     // Drive the robot to a desired Point (lab 3)
-                    if (jaguarControl.autoMode == jaguarControl.AUTO_TRACKTRAJ)
-                    {
-                        TrackTrajectory();
-                    }
                     FlyToSetPoint();
-                    breadCrumbsCount += deltaT;
-                    if (breadCrumbsCount >= breadCrumbsInterval)
-                    {
-                        breadCrumbs.addPoint(new JagPoint(x, y, t));
-                    }
+
                     // Follow the trajectory instead of a desired point (lab 3)
                     //TrackTrajectory();
 
@@ -254,9 +253,6 @@ namespace DrRobot.JaguarControl
                     else 
                     {
                         // Determine the desired PWM signals for desired wheel speeds
-
-                        desiredRotRateL = 1;
-
                         CalcMotorSignals();
                         ActuateMotorsWithPWMControl();
                     }
@@ -361,6 +357,18 @@ namespace DrRobot.JaguarControl
                 // Get most recenct encoder measurements
                 currentEncoderPulseL = simulatedJaguar.GetEncoderPulse4();
                 currentEncoderPulseR = simulatedJaguar.GetEncoderPulse5();
+
+                // Get most recent laser scanner measurements
+                laserCounter = laserCounter + deltaT;
+                if (laserCounter >= 2000)
+                {
+                    for (int i = 0; i < LaserData.Length; i=i+laserStepSize)
+                    {
+                        LaserData[i] = (long)(1000 * map.GetClosestWallDistance(x, y, t -1.57 + laserAngles[i]));
+                    }
+                    laserCounter = 0;
+                    newLaserData = true;
+                }
             }
             else
             {
@@ -393,69 +401,19 @@ namespace DrRobot.JaguarControl
             motorSignalR = (short)(desiredRotRateR);
 
         }
-        private short count = 1;
-
         public void CalcMotorSignals()
         {
-            if (diffEncoderPulseR == 0 && diffEncoderPulseL == 0 && count < 20)
-            {
-                count += 1;
-                return;
-            }
-
             short zeroOutput = 16383;
             short maxPosOutput = 32767;
-            // desiredRotRateR = 10;
-            // desiredRotRateL = 10;
-            double deltaTinS = (double)deltaT / 1000;
-            // We will use the desiredRotRateRs to set our PWM signals
-            desiredRotRateR = 600;
-            desiredRotRateL = 600;
-
-            double currentRotRateR = -jaguarControl.rightFrontWheelMotor.encodeSpeed * jaguarControl.rightFrontWheelMotor.encoderDir;//(diffEncoderPulseR / (count * deltaTinS));
-            double currentRotRateL = jaguarControl.leftFrontWheelMotor.encodeSpeed * jaguarControl.leftFrontWheelMotor.encoderDir;//(diffEncoderPulseL / (count * deltaTinS));
-
-            double cur_e_R = desiredRotRateR - currentRotRateR; //in units of rad per second
-            double cur_e_L = desiredRotRateL - currentRotRateL;
-
-            int e_dir_R = (int)(cur_e_R - e_R);
-            int e_dir_L = (int)(cur_e_L - e_L);
-            e_R = cur_e_R;
-            e_L = cur_e_L;
-
-            int maxErr = (int)(3000 / deltaT);
 
 
-            //K_p = 0.1;//1
-            K_i = 0;//12 / deltaT;//20
-            K_d = 0;// 100.1;
 
-            //Kpho = 1.5;
-            //Kalpha = 8;//4
-            //Kbeta = -0.8;//-1.0;
-
-
-            u_R = K_p * e_R + K_i * e_sum_R + K_d * e_dir_R;
-            u_L = K_p * e_L + K_i * e_sum_L + K_d * e_dir_L;
-
-            motorSignalL = (short)(zeroOutput + u_L);//(zeroOutput + desiredRotRateL * 300);// (zeroOutput + u_L);
-            motorSignalR = (short)(zeroOutput - u_R);// (zeroOutput - desiredRotRateR * 100);//(zeroOutput - u_R);
+            motorSignalL = (short)(zeroOutput);
+            motorSignalR = (short)(zeroOutput);
 
             motorSignalL = (short)Math.Min(maxPosOutput, Math.Max(0, (int)motorSignalL));
             motorSignalR = (short)Math.Min(maxPosOutput, Math.Max(0, (int)motorSignalR));
 
-            e_sum_R = Math.Max(-maxErr, Math.Min(0.90 * e_sum_R + e_R * deltaT, maxErr));
-            e_sum_L = Math.Max(-maxErr, Math.Min(0.90 * e_sum_L + e_L * deltaT, maxErr));
-
-            Console.WriteLine(K_p + " " + cur_e_R + " "+ currentRotRateR);//"desired: " + desiredRotRateR.ToString() + " diffEncoderPulseR:" + diffEncoderPulseR + " diff/s:" + diffEncoderPulseR /(count* deltaTinS) + " cur_e_R: " + cur_e_R + " u_R:" + u_R + " motorSignalR:" + motorSignalR);
-
-            aa = u_R;
-            bb = diffEncoderPulseR;
-            cc = diffEncoderPulseR / deltaTinS;
-            dd = desiredRotRateR;
-            ee = motorSignalR;
-
-            count = 1;
         }
 
         // At every iteration of the control loop, this function sends
@@ -477,13 +435,7 @@ namespace DrRobot.JaguarControl
             if (jaguarControl.Simulating())
                 simulatedJaguar.DcMotorVelocityNonTimeCtrAll(0, 0, 0, motorSignalL, (short)(-motorSignalR), 0);
             else
-            {
-                // Setup Control
-                jaguarControl.realJaguar.SetDcMotorVelocityControlPID(3, (short)K_P, (short)K_D, (short)K_I);
-                jaguarControl.realJaguar.SetDcMotorVelocityControlPID(4, (short)K_P, (short)K_D, (short)K_I);
-
                 jaguarControl.realJaguar.DcMotorVelocityNonTimeCtrAll(0, 0, 0, motorSignalL, (short)(-motorSignalR), 0);
-            }
         }
         #endregion
 
@@ -520,7 +472,7 @@ namespace DrRobot.JaguarControl
             {
                 TimeSpan ts = DateTime.Now - startTime;
                 time = ts.TotalSeconds;
-                String newData = time.ToString() + "," + aa + "," + bb+ "," + cc +"," + dd+ "," +ee;//;+ " " + x.ToString() + " " + y.ToString() + " " + t.ToString() ;
+                 String newData = time.ToString() + " " + x.ToString() + " " + y.ToString() + " " + t.ToString() ;
 
                 logFile.WriteLine(newData);
             }
@@ -552,21 +504,7 @@ namespace DrRobot.JaguarControl
             // ****************** Additional Student Code: End   ************                
         }
 
-        public Boolean initFlyToSetPoint;
-        public int dir;
 
-        public void setSetPoint(double xx, double yy, double tt)
-        {
-            desiredX = xx;
-            desiredY = yy;
-            desiredT = tt;
-            resetFlyToSetPoint();
-        }
-
-        public void resetFlyToSetPoint()
-        {
-            initFlyToSetPoint = true;
-        }
         // This function is called at every iteration of the control loop
         // if used, this function can drive the robot to any desired
         // robot state. It does not check for collisions
@@ -574,95 +512,22 @@ namespace DrRobot.JaguarControl
         {
 
             // ****************** Additional Student Code: Start ************
-            //int dir = 1;
 
-            double dx = desiredX - x_est;
-            double dy = desiredY - y_est;
-
-            double a = -1.0 * t_est + Math.Atan2(dy, dx);
-            a = boundAngle(a, 1);
-            if (initFlyToSetPoint)
-            {//rear facing
-                if (a < -Math.PI / 2 || a > Math.PI / 2)
-                {
-                    dir = -1;
-                }
-                else { dir = 1; }
-                Console.WriteLine("direction: " + dir);
-                initFlyToSetPoint = false;
-            }
-            a = -1.0 * t_est + Math.Atan2(dir * dy, dir * dx);
-            a = boundAngle(a, 1);
-            double p = Math.Sqrt(Math.Pow(dx, 2) + Math.Pow(dy, 2)); //distance away from setpoint
-            double b = -1.0 * t_est - a + boundAngle(desiredT, 1) ;
-            b = boundAngle(b, 1);
-
-            Console.WriteLine("desired: {0} 2: {1} 1: {2}", desiredT, boundAngle(desiredT, 2), boundAngle(desiredT, 1));
-            double v = Kpho * p; //set velocity to v (m/s)
-            v = Math.Min(maxVelocity, v);
-            v = dir * v;
-            double w = Kalpha * a + Kbeta * b; //set rotation to w
-
-            aa = p;
-            bb = v;
-            cc = w;
-            dd = a;
-            ee = b;
-            
-
-            double w2 = 0.5 * (w + v / robotRadius); //Left rotation
-            double w1 = 0.5 * (w - v / robotRadius); //Right rotation
-
-            double phi1 = -1.0 * robotRadius * w1 / wheelRadius;
-            double phi2 = robotRadius * w2 / wheelRadius;
-
-            double pulsePerMeter = pulsesPerRotation / (2 * Math.PI);
-
-            desiredRotRateL = (short)(phi1 * pulsePerMeter);
-            desiredRotRateR = (short)(phi2 * pulsePerMeter);
-
-            // System.Console.WriteLine("desiredRotRateL: " + desiredRotRateL + " desiredRotRateR: " + desiredRotRateR);
-
-            //System.Console.WriteLine("x: " + x_est.ToString() + " y:" + y_est.ToString() + " t:" + t_est.ToString());
-            //System.Console.WriteLine("dx:" + dx.ToString() + " dy:" + dy.ToString() + "p:" + p.ToString() + " a:" + a.ToString() + " b:" + b.ToString() + " v:" + v.ToString()
-            //    + " w:" + w.ToString() + " w1:" + w1.ToString() + " w2:" + w2.ToString());
-
-            //motorSignalL = phi1;
-            //motorSignalR = phi2;
-            // Put code here to calculate motorSignalR and 
-            // motorSignalL. Make sure the robot does not exceed 
+            // Put code here to calculate desiredRotRateR and 
+            // desoredRotRateL. Make sure the robot does not exceed 
             // maxVelocity!!!!!!!!!!!!
 
+                desiredRotRateR = 0;
+                desiredRotRateL = 0;
 
             // ****************** Additional Student Code: End   ************
         }
 
 
-        public Boolean hasStartedTrackingTrajectory;
-        public double trajThresh = 0.1;
+
         // THis function is called to follow a trajectory constructed by PRMMotionPlanner()
         private void TrackTrajectory()
         {
-            if (trajectory.empty())
-                return;
-
-            if (!hasStartedTrackingTrajectory)
-            {
-                JagPoint target = trajectory.getTargetPoint();
-                setSetPoint(target.x, target.y, trajectory.tangent());
-                hasStartedTrackingTrajectory = true;
-            }
-            if(!trajectory.isEnd() && trajectory.isWithinTheshhold(trajThresh,new JagPoint(x_est,y_est)))
-            {
-                trajectory.nextPoint();
-
-                JagPoint target = trajectory.getTargetPoint();
-                desiredX = target.x;
-                desiredY = target.y;
-                desiredT = target.hasTheta() ? target.theta : 0;
-
-                resetFlyToSetPoint();
-            }
 
         }
 
@@ -684,7 +549,7 @@ namespace DrRobot.JaguarControl
         // and use those measurements to predict the RELATIVE forward 
         // motion and rotation of the robot. These are referred to as
         // distanceTravelled and angleTravelled respectively.
-        public void MotionPrediction()//CWiRobotSDK* m_MOTSDK_rob)
+        public void MotionPrediction()
         {
 
             // ****************** Additional Student Code: Start ************
@@ -695,46 +560,7 @@ namespace DrRobot.JaguarControl
             // in the Robot.h file.
 
 
-
-            diffEncoderPulseR = -(currentEncoderPulseR - lastEncoderPulseR);
-            diffEncoderPulseL = currentEncoderPulseL - lastEncoderPulseL;
-
-            // If rollover occurs, this will measure the correct encoder difference
-            if (Math.Abs(diffEncoderPulseR) > 0.5 * encoderMax)
-            {
-                if (diffEncoderPulseR < 0)
-                {
-                    diffEncoderPulseR = -encoderMax - 1 - diffEncoderPulseR;
-                }
-                if (diffEncoderPulseR > 0)
-                {
-                    diffEncoderPulseR = encoderMax + 1 - diffEncoderPulseR;
-                }
-            }
-            if (Math.Abs(diffEncoderPulseL) > 0.5 * encoderMax)
-            {
-                if (diffEncoderPulseL < 0)
-                {
-                    diffEncoderPulseL = -encoderMax - 1 - diffEncoderPulseL;
-                }
-                if (diffEncoderPulseL > 0)
-                {
-                    diffEncoderPulseL = encoderMax + 1 - diffEncoderPulseL;
-                }
-            }
-
-
-            // distance = r*theta where r=wheelRadius and theta=2*pi*encoderMeasurement/pulsesPerRevolution
-            wheelDistanceR = wheelRadius * 2 * Math.PI * diffEncoderPulseR / pulsesPerRotation;
-            wheelDistanceL = wheelRadius * 2 * Math.PI * diffEncoderPulseL / pulsesPerRotation;
-
-            // Distance travelled is the average of the left and right wheel distances
-            distanceTravelled = (wheelDistanceL + wheelDistanceR) / 2;
-            angleTravelled = (wheelDistanceR - wheelDistanceL) / (2 * robotRadius);
-
-            //Save encoder value for next loop iteration
-            lastEncoderPulseL = currentEncoderPulseL;
-            lastEncoderPulseR = currentEncoderPulseR;
+            
 
             // ****************** Additional Student Code: End   ************
         }
@@ -742,7 +568,7 @@ namespace DrRobot.JaguarControl
         // This function will Localize the robot, i.e. set the robot position
         // defined by x,y,t using the last position with angleTravelled and
         // distance travelled.
-        public void LocalizeRealWithOdometry()//CWiRobotSDK* m_MOTSDK_rob)
+        public void LocalizeRealWithOdometry()
         {
             // ****************** Additional Student Code: Start ************
 
@@ -750,27 +576,13 @@ namespace DrRobot.JaguarControl
             // (i.e. using last x, y, t as well as angleTravelled and distanceTravelled).
             // Make sure t stays between pi and -pi
 
-            // Update the actual
-            x = x + distanceTravelled * Math.Cos(t + angleTravelled / 2);
-            y = y + distanceTravelled * Math.Sin(t + angleTravelled / 2);
-            t = t + angleTravelled;
-            //Console.WriteLine(t);
-
-            if (t > Math.PI)
-            {
-                t = t - 2 * Math.PI;
-            }
-            if (t < -1 * Math.PI)
-            {
-                t = t + 2 * Math.PI;
-            }
 
             // ****************** Additional Student Code: End   ************
         }
         // This function will Localize the robot, i.e. set the robot position
         // defined by x,y,t using the last position with angleTravelled and
         // distance travelled.
-        public void LocalizeRealWithIMU()//CWiRobotSDK* m_MOTSDK_rob)
+        public void LocalizeRealWithIMU()
         {
             // ****************** Additional Student Code: Start ************
 
@@ -787,39 +599,127 @@ namespace DrRobot.JaguarControl
         {
             // To start, just set the estimated to be the actual for simulations
             // This will not be necessary when running the PF lab
-            x_est = x;
-            y_est = y;
-            t_est = t;
+            
 
             // ****************** Additional Student Code: Start ************
 
             // Put code here to calculate x_est, y_est, t_est using a PF
 
-
+            x_est = 0; y_est = 0; t_est = 0;
 
 
             // ****************** Additional Student Code: End   ************
 
         }
-        #endregion
 
-        private double boundAngle(double theta, double sthPi)
+        // Particle filters work by setting the weight associated with each
+        // particle, according to the difference between the real robot 
+        // range measurements and the predicted measurements associated 
+        // with the particle.
+        // This function should calculate the weight associated with particle p.
+
+        void CalculateWeight(int p)
         {
-            //if sthpi is 2, then it bounds between 0 and 2pi
-            if (theta <= sthPi * Math.PI && theta >= sthPi * Math.PI - 2 * Math.PI)
-            {
-                return theta;
-            }
-            if (theta > sthPi * Math.PI)
-            {
-                theta -= 2*Math.PI;
-            }
-            else if (theta < sthPi * Math.PI - 2 * Math.PI)
-            {
-                theta += 2*Math.PI;
-            }
-            return boundAngle(theta, sthPi);
+	        double weight = 0;
+
+	        // ****************** Additional Student Code: Start ************
+
+	        // Put code here to calculated weight. Feel free to use the
+	        // function map.GetClosestWallDistance from Map.cs.
+
         }
+
+
+
+        // This function is used to initialize the particle states 
+        // for particle filtering. It should pick a random location in the 
+        // environment for each particle by calling SetRandomPos
+
+        void InitializeParticles() {
+
+
+	        // Set particles in random locations and orientations within environment
+	        for (int i=0; i< numParticles; i++){
+
+		        // Either set the particles at known start position [0 0 0],  
+		        // or set particles at random locations.
+
+                if (jaguarControl.startMode == jaguarControl.UNKNOWN)
+    		        SetRandomPos(i);
+                else if (jaguarControl.startMode == jaguarControl.KNOWN)
+		            SetStartPos(i);
+	        }
+            
+        }
+
+
+
+        // For particle p, this function will select a valid position. It should
+        // select the position randomly, with equal likelihood of being anywhere 
+        // in the environement. Should work for rectangular environments to make 
+        // things easier.
+
+        void SetRandomPos(int p){
+
+	        // ****************** Additional Student Code: Start ************
+
+	        // Put code here to calculated the position, orientation of 
+            // particles[p]. Feel free to use the random.NextDouble() function. 
+	        // It might be helpful to use boundaries defined in the
+	        // Map.cs file (e.g. map.minX)
+	        
+
+
+
+            // ****************** Additional Student Code: End   ************
+        }
+
+
+
+
+        // For particle p, this function will select a start predefined position. 
+        void SetStartPos(int p){
+	        particles[p].x = initialX;
+	        particles[p].y = initialY;
+	        particles[p].t = initialT;
+        }
+
+
+
+        // Random number generator with gaussian distribution
+        // Often random guassian numbers are used in particle filters. This
+        // function might help.
+
+        double RandomGaussian()
+        {
+	        double U1, U2, V1=0, V2;
+	        double S = 2.0;
+	        while(S >= 1.0) 
+	        {
+		        U1 = random.NextDouble();
+                U2 = random.NextDouble();
+		        V1 = 2.0*U1-1.0;
+		        V2 = 2.0*U2-1.0;
+		        S = Math.Pow(V1,2) + Math.Pow(V2,2);
+	        }
+	        double gauss = V1*Math.Sqrt((-2.0*Math.Log(S))/S);
+	        return gauss;
+        }
+
+
+
+        // Get the sign of a number
+        double Sgn(double a)
+        {
+	        if (a>0)
+                return 1.0;
+	        else if (a<0)
+                return -1.0;
+	        else
+                return 0.0;
+        }
+
+        #endregion
 
     }
 }

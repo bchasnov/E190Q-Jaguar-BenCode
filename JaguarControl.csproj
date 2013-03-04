@@ -103,22 +103,10 @@
     <Compile Include="LaserScan.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Map.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Map.Designer.cs">
-      <DependentUpon>Map.cs</DependentUpon>
-    </Compile>
+    <Compile Include="Map.cs" />
     <Compile Include="Navigation.cs" />
-    <Compile Include="ParamEdit.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="ParamEdit.Designer.cs">
-      <DependentUpon>ParamEdit.cs</DependentUpon>
-    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Trajectory.cs" />
     <EmbeddedResource Include="DrRobotRobotConnection.resx">
       <DependentUpon>DrRobotRobotConnection.cs</DependentUpon>
     </EmbeddedResource>
@@ -130,12 +118,6 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>JaguarCtrlResource.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="Map.resx">
-      <DependentUpon>Map.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ParamEdit.resx">
-      <DependentUpon>ParamEdit.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -146,7 +128,6 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <None Include="ClassDiagram1.cd" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

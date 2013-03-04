@@ -29,6 +29,8 @@
         private void InitializeComponent()
         {
             this.trackBar1 = new System.Windows.Forms.TrackBar();
+            this.button1 = new System.Windows.Forms.Button();
+            this.mapScale = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.trackBar1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -45,11 +47,32 @@
             this.trackBar1.Value = 1;
             this.trackBar1.Scroll += new System.EventHandler(this.trackBar1_Scroll);
             // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(543, 12);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(75, 23);
+            this.button1.TabIndex = 1;
+            this.button1.Text = "Print Map";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
+            // mapScale
+            // 
+            this.mapScale.AutoSize = true;
+            this.mapScale.Location = new System.Drawing.Point(625, 21);
+            this.mapScale.Name = "mapScale";
+            this.mapScale.Size = new System.Drawing.Size(58, 13);
+            this.mapScale.TabIndex = 2;
+            this.mapScale.Text = "map_scale";
+            // 
             // Map
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(696, 548);
+            this.Controls.Add(this.mapScale);
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.trackBar1);
             this.Name = "Map";
             this.Text = "Map";
@@ -63,6 +86,8 @@
         #endregion
 
         private System.Windows.Forms.TrackBar trackBar1;
+        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Label mapScale;
 
     }
 }
