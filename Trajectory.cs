@@ -157,6 +157,7 @@ namespace DrRobot.JaguarControl
                 string[] points = str.Split(splitChar);
                 foreach (string sp in points)
                 {
+                    if (sp.Length < 1) break;
                     string[] xyt = sp.Split(',');
                     double x = Double.Parse(xyt[0]);
                     double y = Double.Parse(xyt[1]);

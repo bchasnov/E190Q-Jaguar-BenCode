@@ -56,6 +56,19 @@ namespace DrRobot.JaguarControl
         private void button1_Click(object sender, EventArgs e)
         {
             Console.WriteLine(jaguarControl.navigation.trajectory.getMap());
+            mapString.Text = jaguarControl.navigation.trajectory.getMap();
+        }
+
+        private void loadMap_Click(object sender, EventArgs e)
+        {
+            jaguarControl.navigation.trajMap = mapString.Text;
+            Console.WriteLine(jaguarControl.navigation.trajMap);
+            jaguarControl.navigation.Reset();
+        }
+
+        private void mapString_TextChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }

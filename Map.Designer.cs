@@ -31,16 +31,18 @@
             this.trackBar1 = new System.Windows.Forms.TrackBar();
             this.button1 = new System.Windows.Forms.Button();
             this.mapScale = new System.Windows.Forms.Label();
+            this.mapString = new System.Windows.Forms.TextBox();
+            this.loadMap = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.trackBar1)).BeginInit();
             this.SuspendLayout();
             // 
             // trackBar1
             // 
-            this.trackBar1.Location = new System.Drawing.Point(12, 12);
+            this.trackBar1.Location = new System.Drawing.Point(12, -1);
             this.trackBar1.Maximum = 100;
             this.trackBar1.Minimum = 1;
             this.trackBar1.Name = "trackBar1";
-            this.trackBar1.Size = new System.Drawing.Size(524, 45);
+            this.trackBar1.Size = new System.Drawing.Size(264, 45);
             this.trackBar1.TabIndex = 0;
             this.trackBar1.TickFrequency = 10;
             this.trackBar1.TickStyle = System.Windows.Forms.TickStyle.None;
@@ -49,7 +51,7 @@
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(543, 12);
+            this.button1.Location = new System.Drawing.Point(334, 3);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(75, 23);
             this.button1.TabIndex = 1;
@@ -60,17 +62,37 @@
             // mapScale
             // 
             this.mapScale.AutoSize = true;
-            this.mapScale.Location = new System.Drawing.Point(625, 21);
+            this.mapScale.Location = new System.Drawing.Point(270, 8);
             this.mapScale.Name = "mapScale";
             this.mapScale.Size = new System.Drawing.Size(58, 13);
             this.mapScale.TabIndex = 2;
             this.mapScale.Text = "map_scale";
             // 
+            // mapString
+            // 
+            this.mapString.Location = new System.Drawing.Point(12, 32);
+            this.mapString.Name = "mapString";
+            this.mapString.Size = new System.Drawing.Size(478, 20);
+            this.mapString.TabIndex = 3;
+            this.mapString.TextChanged += new System.EventHandler(this.mapString_TextChanged);
+            // 
+            // loadMap
+            // 
+            this.loadMap.Location = new System.Drawing.Point(415, 3);
+            this.loadMap.Name = "loadMap";
+            this.loadMap.Size = new System.Drawing.Size(75, 23);
+            this.loadMap.TabIndex = 4;
+            this.loadMap.Text = "loadMap";
+            this.loadMap.UseVisualStyleBackColor = true;
+            this.loadMap.Click += new System.EventHandler(this.loadMap_Click);
+            // 
             // Map
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(696, 548);
+            this.ClientSize = new System.Drawing.Size(936, 548);
+            this.Controls.Add(this.loadMap);
+            this.Controls.Add(this.mapString);
             this.Controls.Add(this.mapScale);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.trackBar1);
@@ -88,6 +110,8 @@
         private System.Windows.Forms.TrackBar trackBar1;
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.Label mapScale;
+        private System.Windows.Forms.TextBox mapString;
+        private System.Windows.Forms.Button loadMap;
 
     }
 }

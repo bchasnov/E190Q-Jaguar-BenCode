@@ -153,14 +153,14 @@ namespace DrRobot.JaguarControl
             trajectory.addPoint(new jagPoint(3, 3, 1));
             trajectory.addPoint(new jagPoint(4, 4, 1));
             trajectory.addPoint(new jagPoint(4, 5, 1));*/
-            trajectory = JagTrajectory.parseTxt(JagTrajectory.esss);
+            trajectory = JagTrajectory.parseTxt(trajMap);
             hasStartedTrackingTrajectory = false;
 
             breadCrumbs = new JagPath();
             breadCrumbs.addPoint(new JagPoint(x, y, t));
             breadCrumbsCount = 0;
         }
-
+        public String trajMap = "0,0,0";
         // This function is called from the dialogue window "Reset Button"
         // click function. It resets all variables.
         public void Reset()
@@ -647,6 +647,12 @@ namespace DrRobot.JaguarControl
             //Console.WriteLine("desired: {0} 2: {1} 1: {2}", desiredT, boundAngle(desiredT, 2), boundAngle(desiredT, 1));
             double v = Kpho * p; //set velocity to v (m/s)
             v = Math.Min(maxVelocity, v);
+
+            if (!trajectory.isEnd())
+            {
+                v = maxVelocity;
+            }
+
             v = dir * v;
             double w = Kalpha * a + Kbeta * b; //set rotation to w
 
@@ -686,7 +692,7 @@ namespace DrRobot.JaguarControl
 
 
         public Boolean hasStartedTrackingTrajectory;
-        public double trajThresh = 0.1;
+        public double trajThresh = 0.5;
         // THis function is called to follow a trajectory constructed by PRMMotionPlanner()
         private void TrackTrajectory()
         {
