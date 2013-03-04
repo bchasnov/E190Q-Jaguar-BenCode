@@ -103,11 +103,12 @@
     <Compile Include="LaserScan.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Map.cs">
+    <Compile Include="Map.cs" />
+    <Compile Include="MapGui.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Map.Designer.cs">
-      <DependentUpon>Map.cs</DependentUpon>
+    <Compile Include="MapGui.Designer.cs">
+      <DependentUpon>MapGui.cs</DependentUpon>
     </Compile>
     <Compile Include="Navigation.cs" />
     <Compile Include="ParamEdit.cs">
@@ -131,8 +132,8 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>JaguarCtrlResource.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="Map.resx">
-      <DependentUpon>Map.cs</DependentUpon>
+    <EmbeddedResource Include="MapGui.resx">
+      <DependentUpon>MapGui.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ParamEdit.resx">
       <DependentUpon>ParamEdit.cs</DependentUpon>

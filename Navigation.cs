@@ -73,6 +73,7 @@ namespace DrRobot.JaguarControl
         public double e_R = 0;
         public double e_L = 0;
 
+        public double rotRateL, rotRateR;
         public double accCalib_x = 18;
         public double accCalib_y = 4;
 
@@ -80,6 +81,29 @@ namespace DrRobot.JaguarControl
         public JagPath breadCrumbs;
         public int breadCrumbsInterval = 200;
         public int breadCrumbsCount = 0;
+
+        // PF Variables
+        public Map map;
+        public Particle[] particles;
+        public Particle[] propagatedParticles;
+        public int numParticles = 1000;
+        public double K_wheelRandomness = 0.15;//0.25
+        public Random random = new Random();
+        public bool newLaserData = false;
+        public double laserMaxRange = 4.0;
+        public double laserMinRange = 0.2;
+        public double[] laserAngles;
+        private int laserCounter;
+        private int laserStepSize = 3;
+
+        public class Particle
+        {
+            public double x, y, t, w;
+
+            public Particle()
+            {
+            }
+        }
         #endregion
 
 
@@ -92,6 +116,16 @@ namespace DrRobot.JaguarControl
             jaguarControl = jc;
             realJaguar = jc.realJaguar;
             simulatedJaguar = jc.simulatedJaguar;
+
+            map = new Map();
+            particles = new Particle[numParticles];
+            propagatedParticles = new Particle[numParticles];
+            // Create particles
+            for (int i = 0; i < numParticles; i++)
+            {
+                particles[i] = new Particle();
+                propagatedParticles[i] = new Particle();
+            }
             this.Initialize();
 
 
@@ -129,7 +163,7 @@ namespace DrRobot.JaguarControl
             loggingOn = false;
 
             // Set random start for particles
-            //InitializeParticles();
+            InitializeParticles();
 
             // Set default to no motionPlanRequired
             motionPlanRequired = false;
@@ -139,6 +173,10 @@ namespace DrRobot.JaguarControl
             displayParticles = true;
             displayNodes = true;
             displaySimRobot = true;
+
+            laserAngles = new double[LaserData.Length];
+            for (int i = 0; i < LaserData.Length; i++)                
+                laserAngles[i] = DrRobot.JaguarControl.JaguarCtrl.startAng + DrRobot.JaguarControl.JaguarCtrl.stepAng * i;
 
             aa = 0;
             bb = 0;
@@ -153,14 +191,14 @@ namespace DrRobot.JaguarControl
             trajectory.addPoint(new jagPoint(3, 3, 1));
             trajectory.addPoint(new jagPoint(4, 4, 1));
             trajectory.addPoint(new jagPoint(4, 5, 1));*/
-            trajectory = JagTrajectory.parseTxt(JagTrajectory.esss);
+            trajectory = JagTrajectory.parseTxt(trajMap);
             hasStartedTrackingTrajectory = false;
 
             breadCrumbs = new JagPath();
             breadCrumbs.addPoint(new JagPoint(x, y, t));
             breadCrumbsCount = 0;
         }
-
+        public String trajMap = "0,0,0";
         // This function is called from the dialogue window "Reset Button"
         // click function. It resets all variables.
         public void Reset()
@@ -365,6 +403,18 @@ namespace DrRobot.JaguarControl
                 // Get most recenct encoder measurements
                 currentEncoderPulseL = simulatedJaguar.GetEncoderPulse4();
                 currentEncoderPulseR = simulatedJaguar.GetEncoderPulse5();
+
+                // Get most recent laser scanner measurements
+                laserCounter = laserCounter + deltaT;
+                if (laserCounter >= 2000)
+                {
+                    for (int i = 0; i < LaserData.Length; i=i+laserStepSize)
+                    {
+                        LaserData[i] = (long)(1000 * map.GetClosestWallDistance(x, y, t -1.57 + laserAngles[i]));
+                    }
+                    laserCounter = 0;
+                    newLaserData = true;
+                }
             }
             else
             {
@@ -647,6 +697,12 @@ namespace DrRobot.JaguarControl
             //Console.WriteLine("desired: {0} 2: {1} 1: {2}", desiredT, boundAngle(desiredT, 2), boundAngle(desiredT, 1));
             double v = Kpho * p; //set velocity to v (m/s)
             v = Math.Min(maxVelocity, v);
+
+            if (!trajectory.isEnd())
+            {
+                v = maxVelocity;
+            }
+
             v = dir * v;
             double w = Kalpha * a + Kbeta * b; //set rotation to w
 
@@ -686,7 +742,7 @@ namespace DrRobot.JaguarControl
 
 
         public Boolean hasStartedTrackingTrajectory;
-        public double trajThresh = 0.1;
+        public double trajThresh = 0.5;
         // THis function is called to follow a trajectory constructed by PRMMotionPlanner()
         private void TrackTrajectory()
         {
@@ -842,6 +898,126 @@ namespace DrRobot.JaguarControl
 
             // Put code here to calculate x_est, y_est, t_est using a PF
 
+            // To start, just set the estimated to be the actual for simulations
+            // This will not be necessary when running the PF lab
+            
+
+            // ****************** Additional Student Code: Start ************
+
+            // Put code here to calculate x_est, y_est, t_est using a PF
+
+            x_est = 0; y_est = 0; t_est = 0;
+
+
+            // ****************** Additional Student Code: End   ************
+
+        }
+
+        // Particle filters work by setting the weight associated with each
+        // particle, according to the difference between the real robot 
+        // range measurements and the predicted measurements associated 
+        // with the particle.
+        // This function should calculate the weight associated with particle p.
+
+        void CalculateWeight(int p)
+        {
+	        double weight = 0;
+
+	        // ****************** Additional Student Code: Start ************
+
+	        // Put code here to calculated weight. Feel free to use the
+	        // function map.GetClosestWallDistance from Map.cs.
+
+        }
+
+
+
+        // This function is used to initialize the particle states 
+        // for particle filtering. It should pick a random location in the 
+        // environment for each particle by calling SetRandomPos
+
+        void InitializeParticles() {
+
+
+	        // Set particles in random locations and orientations within environment
+	        for (int i=0; i< numParticles; i++){
+
+		        // Either set the particles at known start position [0 0 0],  
+		        // or set particles at random locations.
+
+                if (jaguarControl.startMode == jaguarControl.UNKNOWN)
+    		        SetRandomPos(i);
+                else if (jaguarControl.startMode == jaguarControl.KNOWN)
+		            SetStartPos(i);
+	        }
+            
+        }
+
+
+
+        // For particle p, this function will select a valid position. It should
+        // select the position randomly, with equal likelihood of being anywhere 
+        // in the environement. Should work for rectangular environments to make 
+        // things easier.
+
+        void SetRandomPos(int p){
+
+	        // ****************** Additional Student Code: Start ************
+
+	        // Put code here to calculated the position, orientation of 
+            // particles[p]. Feel free to use the random.NextDouble() function. 
+	        // It might be helpful to use boundaries defined in the
+	        // Map.cs file (e.g. map.minX)
+	        
+
+
+
+            // ****************** Additional Student Code: End   ************
+        }
+
+
+
+
+        // For particle p, this function will select a start predefined position. 
+        void SetStartPos(int p){
+	        particles[p].x = initialX;
+	        particles[p].y = initialY;
+	        particles[p].t = initialT;
+        }
+
+
+
+        // Random number generator with gaussian distribution
+        // Often random guassian numbers are used in particle filters. This
+        // function might help.
+
+        double RandomGaussian()
+        {
+	        double U1, U2, V1=0, V2;
+	        double S = 2.0;
+	        while(S >= 1.0) 
+	        {
+		        U1 = random.NextDouble();
+                U2 = random.NextDouble();
+		        V1 = 2.0*U1-1.0;
+		        V2 = 2.0*U2-1.0;
+		        S = Math.Pow(V1,2) + Math.Pow(V2,2);
+	        }
+	        double gauss = V1*Math.Sqrt((-2.0*Math.Log(S))/S);
+	        return gauss;
+        }
+
+
+
+        // Get the sign of a number
+        double Sgn(double a)
+        {
+	        if (a>0)
+                return 1.0;
+	        else if (a<0)
+                return -1.0;
+	        else
+                return 0.0;
 
 
 

@@ -33,8 +33,12 @@ namespace DrRobot.JaguarControl
         Point[] robotCorners = new Point[4];
         Point[] trackCorners = new Point[4];
 
+        public int KNOWN = 0;
+        public int UNKNOWN = 1;
+        public int startMode = 0;
+
         ParamEdit paramEdit;
-        Map largerMap;
+        MapGui largerMap;
         # endregion
 
         #region Graphics Variables
@@ -58,6 +62,10 @@ namespace DrRobot.JaguarControl
         private static Pen medGreenPen = new Pen(Color.FromArgb(0,255,0), 3);
         private static Pen goldPen = new Pen(Color.Gold, 1);
         private static Pen trackPen = new Pen(Brushes.LightGray);
+        private static Pen wallPen = new Pen(Brushes.LightGray, 4);
+        private static Pen particlePen = new Pen(Brushes.Red, 1);
+        private static Pen estimatePen = new Pen(Brushes.Blue, 2);
+
         private static double cellWidth = 1.0; // in meters, mapResolution is in metersToPixels
         #endregion
 
@@ -333,6 +341,31 @@ namespace DrRobot.JaguarControl
                 int Y_laser = (int)(yCenter - yShift - laserDiagonal * Math.Sin(navigation.t) - laserDiameter / 2);
                 g.FillEllipse(Brushes.LightGray, X_laser, Y_laser, laserDiameter, laserDiameter);
 
+                // Draw Walls
+                for (int w = 0; w < navigation.map.numMapSegments; w++)
+                {
+                    g.DrawLine(wallPen, (float)(xCenter + mapResolution * navigation.map.mapSegmentCorners[w, 0, 0]), 
+                        (float)(yCenter - mapResolution * navigation.map.mapSegmentCorners[w, 0, 1]),
+                        (float)(xCenter + mapResolution * navigation.map.mapSegmentCorners[w, 1, 0]),
+                        (float)(yCenter - mapResolution * navigation.map.mapSegmentCorners[w, 1, 1]));
+
+                }
+
+                // Draw Particles
+                int partSize = (int)(0.16*mapResolution);
+                int partHalfSize = (int)(0.08 * mapResolution);
+                for (int p = 0; p < navigation.numParticles; p++)
+                {
+                    g.DrawPie(particlePen, (int)(xCenter -partHalfSize + mapResolution * navigation.particles[p].x), (int)(yCenter - partHalfSize - mapResolution * navigation.particles[p].y), partSize, partSize, (int)(-navigation.particles[p].t * 180 / 3.14 - 180 - 25), 50);
+                }
+
+
+                // Draw State Estimate
+                g.DrawPie(estimatePen, (int)(xCenter - partHalfSize + mapResolution * navigation.x_est), (int)(yCenter - partHalfSize - mapResolution * navigation.y_est), partSize, partSize, (int)(-navigation.t_est * 180 / 3.14 - 180 - 25), 50);
+
+                // Paint background of bitmap
+                g.FillRectangle(Brushes.LightGray, new Rectangle(xMin - 40, yMin, 40, paneHeight));
+
                 // Draw Trajectory
                 for (int i = 0; i < navigation.trajectory.points.Count; i++)
                 {
@@ -396,6 +429,7 @@ namespace DrRobot.JaguarControl
                 g.DrawLine(pen, xCenter + xPoint, yCenter - yPoint, xCenter + xPoint + dx, yCenter - yPoint - dy);
             }
         }
+
 
         private void JaguarCtrl_Shown(object sender, EventArgs e)
         {
@@ -1278,6 +1312,17 @@ namespace DrRobot.JaguarControl
             navigation.Reset();
         }
 
+        private void checkBoxKnownStart_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBoxKnownStart.Checked)
+            {
+                startMode = KNOWN;
+            }
+            else
+                startMode = UNKNOWN;
+            
+        }
+
         private void btnTurnOn_Click(object sender, EventArgs e)
         {
             if (clientSocketLaser != null)
@@ -1290,6 +1335,7 @@ namespace DrRobot.JaguarControl
         
         private void btnReset_Click(object sender, EventArgs e)
         {
+            navigation.numParticles = int.Parse(txtNumParticles.Text);
             navigation.Reset();
         }
         
@@ -1345,7 +1391,7 @@ namespace DrRobot.JaguarControl
 
         private void LargerMap_Click(object sender, EventArgs e)
         {
-            largerMap = new Map(this);
+            largerMap = new MapGui(this);
             largerMap.Show();
             largerMap.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.resetLargerMap);
         }

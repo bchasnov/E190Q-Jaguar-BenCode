@@ -113,6 +113,11 @@
             this.button2 = new System.Windows.Forms.Button();
             this.desActivate = new System.Windows.Forms.CheckBox();
             this.LargerMap = new System.Windows.Forms.Button();
+
+//            this.txtNumParticles = new System.Windows.Forms.TextBox();
+//            this.label19 = new System.Windows.Forms.Label();
+//            this.checkBoxKnownStart = new System.Windows.Forms.CheckBox();
+
             this.groupBoxGPSIMU.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.realJaguar)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxIMUGPS)).BeginInit();
@@ -1016,6 +1021,41 @@
             this.txtStartTheta.Size = new System.Drawing.Size(47, 20);
             this.txtStartTheta.TabIndex = 70;
             this.txtStartTheta.Text = "0";
+            // 
+            // txtNumParticles
+            // 
+            /*this.txtNumParticles.Font = new System.Drawing.Font("Arial", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtNumParticles.Location = new System.Drawing.Point(341, 427);
+            this.txtNumParticles.Name = "txtNumParticles";
+            this.txtNumParticles.Size = new System.Drawing.Size(47, 20);
+            this.txtNumParticles.TabIndex = 71;
+            this.txtNumParticles.Text = "1000";
+            // 
+            // label19
+            // 
+            this.label19.Font = new System.Drawing.Font("Arial", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label19.ForeColor = System.Drawing.Color.Black;
+            this.label19.Location = new System.Drawing.Point(303, 428);
+            this.label19.Name = "label19";
+            this.label19.Size = new System.Drawing.Size(59, 18);
+            this.label19.TabIndex = 72;
+            this.label19.Text = "Num P:";
+            this.label19.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // checkBoxKnownStart
+            //
+            this.checkBoxKnownStart.AutoSize = true;
+            this.checkBoxKnownStart.Checked = true;
+            this.checkBoxKnownStart.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxKnownStart.ForeColor = System.Drawing.Color.Black;
+            this.checkBoxKnownStart.Location = new System.Drawing.Point(638, 465);
+            this.checkBoxKnownStart.Name = "checkBoxKnownStart";
+            this.checkBoxKnownStart.Size = new System.Drawing.Size(105, 17);
+            this.checkBoxKnownStart.TabIndex = 73;
+            this.checkBoxKnownStart.Text = "Known Start Loc";
+            this.checkBoxKnownStart.UseVisualStyleBackColor = true;
+            this.checkBoxKnownStart.CheckStateChanged += new System.EventHandler(this.checkBoxKnownStart_CheckedChanged);
+            */
             // 
             // button1
             // 
