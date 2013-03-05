@@ -473,11 +473,11 @@ namespace DrRobot.JaguarControl
 
             Console.WriteLine(K_p + " " + cur_e_R + " "+ currentRotRateR+"desired: " + desiredRotRateR.ToString() + " diffEncoderPulseR:" + diffEncoderPulseR + " diff/s:" + diffEncoderPulseR /(count* deltaTinS) + " cur_e_R: " + cur_e_R + " u_R:" + u_R + " motorSignalR:" + motorSignalR);
 
-            aa = u_R;
+            /*aa = u_R;
             bb = diffEncoderPulseR;
             cc = diffEncoderPulseR / deltaTinS;
             dd = desiredRotRateR;
-            ee = motorSignalR;
+            ee = motorSignalR;*/
 
             count = 1;
         }
@@ -656,9 +656,9 @@ namespace DrRobot.JaguarControl
             v = dir * v;
             double w = Kalpha * a + Kbeta * b; //set rotation to w
 
-            aa = p;
-            bb = v;
-            cc = w;
+            aa = v;
+            bb = w;
+            cc = p;
             dd = a;
             ee = b;
             
