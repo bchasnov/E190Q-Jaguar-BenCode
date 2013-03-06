@@ -72,6 +72,12 @@ namespace DrRobot.JaguarControl
         public double accCalib_x = 18;
         public double accCalib_y = 4;
 
+        public JagTrajectory trajectory;
+        public JagPath breadCrumbs;
+        public int breadCrumbsInterval = 200;
+        public int breadCrumbsCount = 0;
+
+
         // PF Variables
         public Map map;
         public Particle[] particles;
@@ -153,6 +159,20 @@ namespace DrRobot.JaguarControl
             motorSignalR = 0;
             loggingOn = false;
 
+            trajectory = new JagTrajectory();
+            /*
+            trajectory.addPoint(new jagPoint(1, 1, 1));
+            trajectory.addPoint(new jagPoint(2, 2, 1));
+            trajectory.addPoint(new jagPoint(3, 3, 1));
+            trajectory.addPoint(new jagPoint(4, 4, 1));
+            trajectory.addPoint(new jagPoint(4, 5, 1));*/
+            trajectory = JagTrajectory.parseTxt(trajMap);
+            hasStartedTrackingTrajectory = false;
+
+            breadCrumbs = new JagPath();
+            breadCrumbs.addPoint(new JagPoint(x, y, t));
+            breadCrumbsCount = 0;
+
             // Set random start for particles
             InitializeParticles();
 
@@ -170,6 +190,8 @@ namespace DrRobot.JaguarControl
                 laserAngles[i] = DrRobot.JaguarControl.JaguarCtrl.startAng + DrRobot.JaguarControl.JaguarCtrl.stepAng * i;
 
         }
+
+        public String trajMap = "0,0,0";
 
         // This function is called from the dialogue window "Reset Button"
         // click function. It resets all variables.
@@ -480,6 +502,28 @@ namespace DrRobot.JaguarControl
         #endregion
 
 
+        #region Misc. functions
+        private double boundAngle(double theta, double sthPi)
+        {
+            //if sthpi is 2, then it bounds between 0 and 2pi
+            if (theta <= sthPi * Math.PI && theta >= sthPi * Math.PI - 2 * Math.PI)
+            {
+                return theta;
+            }
+            if (theta > sthPi * Math.PI)
+            {
+                theta -= 2 * Math.PI;
+            }
+            else if (theta < sthPi * Math.PI - 2 * Math.PI)
+            {
+                theta += 2 * Math.PI;
+            }
+            return boundAngle(theta, sthPi);
+        }
+
+        #endregion
+
+
         # region Control Functions
 
         // This function is called at every iteration of the control loop
@@ -504,6 +548,21 @@ namespace DrRobot.JaguarControl
             // ****************** Additional Student Code: End   ************                
         }
 
+        public Boolean initFlyToSetPoint;
+        public int dir;
+
+        public void setSetPoint(double xx, double yy, double tt)
+        {
+            desiredX = xx;
+            desiredY = yy;
+            desiredT = tt;
+            resetFlyToSetPoint();
+        }
+
+        public void resetFlyToSetPoint()
+        {
+            initFlyToSetPoint = true;
+        }
 
         // This function is called at every iteration of the control loop
         // if used, this function can drive the robot to any desired
@@ -517,19 +576,83 @@ namespace DrRobot.JaguarControl
             // desoredRotRateL. Make sure the robot does not exceed 
             // maxVelocity!!!!!!!!!!!!
 
-                desiredRotRateR = 0;
-                desiredRotRateL = 0;
+            double dx = desiredX - x_est;
+            double dy = desiredY - y_est;
+
+            double a = -1.0 * t_est + Math.Atan2(dy, dx);
+            a = boundAngle(a, 1);
+            if (initFlyToSetPoint)
+            {//rear facing
+                if (a < -Math.PI / 2 || a > Math.PI / 2)
+                {
+                    dir = -1;
+                }
+                else { dir = 1; }
+                //Console.WriteLine("direction: " + dir);
+                initFlyToSetPoint = false;
+            }
+            a = -1.0 * t_est + Math.Atan2(dir * dy, dir * dx);
+            a = boundAngle(a, 1);
+            double p = Math.Sqrt(Math.Pow(dx, 2) + Math.Pow(dy, 2)); //distance away from setpoint
+            double b = -1.0 * t_est - a + boundAngle(desiredT, 1);
+            b = boundAngle(b, 1);
+
+            //Console.WriteLine("desired: {0} 2: {1} 1: {2}", desiredT, boundAngle(desiredT, 2), boundAngle(desiredT, 1));
+            double v = Kpho * p; //set velocity to v (m/s)
+            v = Math.Min(maxVelocity, v);
+
+            if (!trajectory.isEnd())
+            {
+                v = maxVelocity;
+            }
+
+            v = dir * v;
+            double w = Kalpha * a + Kbeta * b; //set rotation to w
+
+            double w2 = 0.5 * (w + v / robotRadius); //Left rotation
+            double w1 = 0.5 * (w - v / robotRadius); //Right rotation
+
+            double phi1 = -1.0 * robotRadius * w1 / wheelRadius;
+            double phi2 = robotRadius * w2 / wheelRadius;
+
+            double pulsePerMeter = pulsesPerRotation / (2 * Math.PI * robotRadius);
+
+            desiredRotRateL = (short)(phi1 * pulsePerMeter);
+            desiredRotRateR = (short)(phi2 * pulsePerMeter);
+
 
             // ****************** Additional Student Code: End   ************
         }
 
 
-
+        public Boolean hasStartedTrackingTrajectory;
+        public double trajThresh = 0.5;
         // THis function is called to follow a trajectory constructed by PRMMotionPlanner()
         private void TrackTrajectory()
         {
+            if (trajectory.empty())
+                return;
+
+            if (!hasStartedTrackingTrajectory)
+            {
+                JagPoint target = trajectory.getTargetPoint();
+                setSetPoint(target.x, target.y, trajectory.tangent());
+                hasStartedTrackingTrajectory = true;
+            }
+            if (!trajectory.isEnd() && trajectory.isWithinTheshhold(trajThresh, new JagPoint(x_est, y_est)))
+            {
+                trajectory.nextPoint();
+
+                JagPoint target = trajectory.getTargetPoint();
+                desiredX = target.x;
+                desiredY = target.y;
+                desiredT = target.hasTheta() ? target.theta : 0;
+
+                resetFlyToSetPoint();
+            }
 
         }
+
 
         // THis function is called to construct a collision-free trajectory for the robot to follow
         private void PRMMotionPlanner()
@@ -560,6 +683,46 @@ namespace DrRobot.JaguarControl
             // in the Robot.h file.
 
 
+
+            diffEncoderPulseR = -(currentEncoderPulseR - lastEncoderPulseR);
+            diffEncoderPulseL = currentEncoderPulseL - lastEncoderPulseL;
+
+            // If rollover occurs, this will measure the correct encoder difference
+            if (Math.Abs(diffEncoderPulseR) > 0.5 * encoderMax)
+            {
+                if (diffEncoderPulseR < 0)
+                {
+                    diffEncoderPulseR = -encoderMax - 1 - diffEncoderPulseR;
+                }
+                if (diffEncoderPulseR > 0)
+                {
+                    diffEncoderPulseR = encoderMax + 1 - diffEncoderPulseR;
+                }
+            }
+            if (Math.Abs(diffEncoderPulseL) > 0.5 * encoderMax)
+            {
+                if (diffEncoderPulseL < 0)
+                {
+                    diffEncoderPulseL = -encoderMax - 1 - diffEncoderPulseL;
+                }
+                if (diffEncoderPulseL > 0)
+                {
+                    diffEncoderPulseL = encoderMax + 1 - diffEncoderPulseL;
+                }
+            }
+
+
+            // distance = r*theta where r=wheelRadius and theta=2*pi*encoderMeasurement/pulsesPerRevolution
+            wheelDistanceR = wheelRadius * 2 * Math.PI * diffEncoderPulseR / pulsesPerRotation;
+            wheelDistanceL = wheelRadius * 2 * Math.PI * diffEncoderPulseL / pulsesPerRotation;
+
+            // Distance travelled is the average of the left and right wheel distances
+            distanceTravelled = (wheelDistanceL + wheelDistanceR) / 2;
+            angleTravelled = (wheelDistanceR - wheelDistanceL) / (2 * robotRadius);
+
+            //Save encoder value for next loop iteration
+            lastEncoderPulseL = currentEncoderPulseL;
+            lastEncoderPulseR = currentEncoderPulseR;
             
 
             // ****************** Additional Student Code: End   ************
@@ -575,6 +738,20 @@ namespace DrRobot.JaguarControl
             // Put code here to calculate x,y,t based on odemetry 
             // (i.e. using last x, y, t as well as angleTravelled and distanceTravelled).
             // Make sure t stays between pi and -pi
+            // Update the actual
+            x = x + distanceTravelled * Math.Cos(t + angleTravelled / 2);
+            y = y + distanceTravelled * Math.Sin(t + angleTravelled / 2);
+            t = t + angleTravelled;
+            //Console.WriteLine(t);
+
+            if (t > Math.PI)
+            {
+                t = t - 2 * Math.PI;
+            }
+            if (t < -1 * Math.PI)
+            {
+                t = t + 2 * Math.PI;
+            }
 
 
             // ****************** Additional Student Code: End   ************

@@ -117,14 +117,32 @@ namespace DrRobot.JaguarControl
 
 	        // ****************** Additional Student Code: Start ************
 
-	        
+            double intersect_x = (intercepts[segment] + Math.Tan(t) * x - y) / (Math.Tan(t) - slopes[segment]);
+            double intersect_y = slopes[segment] * intersect_x + intercepts[segment];
 
+
+            if (inRange(intersect_x, X1, X2) && inRange(intersect_y, Y1, Y2))
+            {
+                dist = pythagorean(x - intersect_x, y - intersect_y);
+            }
+            else
+            {
+                dist = -1;
+            }
 	        // ****************** Additional Student Code: End   ************
 
 	        return dist;
         }
 
+        private Boolean inRange(double a, double one, double two)
+        {
+            return (a <= Math.Max(one, two) && a >= Math.Min(one, two));
+        }
 
+        private double pythagorean(double a, double b)
+        {
+            return Math.Sqrt(Math.Pow(a, 2) + Math.Pow(b, 2));
+        }
         // This function is used in particle filter localization to find the
         // range to the closest wall segment, for a robot located
         // at position x, y with sensor with orientation t.
@@ -135,7 +153,10 @@ namespace DrRobot.JaguarControl
 
 	        // ****************** Additional Student Code: Start ************
 
-
+            for (int i = 0; i < numMapSegments; i++)
+            {
+                minDist = Math.Min(minDist, GetWallDistance(x, y, t, i));
+            }
 
 	        // ****************** Additional Student Code: End   ************
 
