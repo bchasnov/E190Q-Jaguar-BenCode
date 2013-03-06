@@ -58,11 +58,11 @@ namespace DrRobot.JaguarControl
         double time = 0;
         DateTime startTime;
 
-        public double K_P = 1;//15;
-        public double K_I = 1;//0;
+        public double K_P = 50;//15;
+        public double K_I = 0;//0;
         public double K_D = 0;//3;
 
-        public double K_p = 25;//15;
+        public double K_p = 50;//15;
         public double K_i = 0;//0;
         public double K_d = 0;//3;
 
@@ -446,11 +446,10 @@ namespace DrRobot.JaguarControl
             //Kbeta = -0.8;//-1.0;
 
 
-            u_R = K_p * e_R + K_i * e_sum_R + K_d * e_dir_R;
-            u_L = K_p * e_L + K_i * e_sum_L + K_d * e_dir_L;
+            u_R = K_p * desiredRotRateR;//e_R + K_i * e_sum_R + K_d * e_dir_R;
+            u_L = K_p * desiredRotRateL;//e_L + K_i * e_sum_L + K_d * e_dir_L;
 
-            u_R += u_R < 0? -4000 : 4000;
-            u_L += u_L < 0? -4000 : 4000;
+            
 
             if (desiredRotRateL == 0)
             {
