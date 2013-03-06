@@ -111,6 +111,7 @@
             this.txtNumParticles = new System.Windows.Forms.TextBox();
             this.label19 = new System.Windows.Forms.Label();
             this.checkBoxKnownStart = new System.Windows.Forms.CheckBox();
+            this.text1 = new System.Windows.Forms.Label();
             this.groupBoxGPSIMU.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.realJaguar)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxIMUGPS)).BeginInit();
@@ -1035,12 +1036,22 @@
             this.checkBoxKnownStart.UseVisualStyleBackColor = true;
             this.checkBoxKnownStart.CheckStateChanged += new System.EventHandler(this.checkBoxKnownStart_CheckedChanged);
             // 
+            // text1
+            // 
+            this.text1.AutoSize = true;
+            this.text1.Location = new System.Drawing.Point(548, 21);
+            this.text1.Name = "text1";
+            this.text1.Size = new System.Drawing.Size(49, 13);
+            this.text1.TabIndex = 74;
+            this.text1.Text = "Distance";
+            // 
             // JaguarCtrl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ControlLight;
             this.ClientSize = new System.Drawing.Size(1016, 698);
+            this.Controls.Add(this.text1);
             this.Controls.Add(this.txtNumParticles);
             this.Controls.Add(this.label19);
             this.Controls.Add(this.txtStartTheta);
@@ -1207,6 +1218,7 @@
         public System.Windows.Forms.TextBox txtNumParticles;
         private System.Windows.Forms.Label label19;
         private System.Windows.Forms.CheckBox checkBoxKnownStart;
+        private System.Windows.Forms.Label text1;
     }
 }
 

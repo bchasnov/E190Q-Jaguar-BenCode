@@ -127,7 +127,7 @@ namespace DrRobot.JaguarControl
             }
             else
             {
-                dist = -1;
+                dist = 99999;
             }
 	        // ****************** Additional Student Code: End   ************
 

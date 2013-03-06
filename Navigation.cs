@@ -230,7 +230,7 @@ namespace DrRobot.JaguarControl
                 // functions to call here. For lab 1, we just call the function
                 // WallPositioning to have the robot maintain a constant distance
                 // to the wall (see lab manual).
-                
+                Console.WriteLine(RandomGaussian());
                 // Update Sensor Readings
                 UpdateSensorMeasurements();
 
@@ -683,7 +683,6 @@ namespace DrRobot.JaguarControl
             // in the Robot.h file.
 
 
-
             diffEncoderPulseR = -(currentEncoderPulseR - lastEncoderPulseR);
             diffEncoderPulseL = currentEncoderPulseL - lastEncoderPulseL;
 
@@ -744,14 +743,8 @@ namespace DrRobot.JaguarControl
             t = t + angleTravelled;
             //Console.WriteLine(t);
 
-            if (t > Math.PI)
-            {
-                t = t - 2 * Math.PI;
-            }
-            if (t < -1 * Math.PI)
-            {
-                t = t + 2 * Math.PI;
-            }
+            t = boundAngle(t, 1);
+
 
 
             // ****************** Additional Student Code: End   ************
@@ -782,8 +775,40 @@ namespace DrRobot.JaguarControl
 
             // Put code here to calculate x_est, y_est, t_est using a PF
 
-            x_est = 0; y_est = 0; t_est = 0;
+            double p_wheelDistanceR = 0;
+            double p_wheelDistanceL = 0;
+            double p_distanceTravelled = 0;
+            double p_angleTravelled = 0;
 
+            //Propagate particles with randomness
+            for (int i = 0; i < numParticles; i++)
+            {
+                // distance = r*theta where r=wheelRadius and theta=2*pi*encoderMeasurement/pulsesPerRevolution
+                p_wheelDistanceL = wheelDistanceL + RandomGaussian() * K_wheelRandomness;
+                p_wheelDistanceR = wheelDistanceR + RandomGaussian() * K_wheelRandomness;
+
+                // Distance travelled is the average of the left and right wheel distances
+                p_distanceTravelled = (p_wheelDistanceL + p_wheelDistanceR) / 2;
+                p_angleTravelled = (p_wheelDistanceR - p_wheelDistanceL) / (2 * robotRadius);
+
+                propagatedParticles[i].x = particles[i].x + p_distanceTravelled * Math.Cos(t + p_angleTravelled / 2);
+                propagatedParticles[i].y = particles[i].y + p_distanceTravelled * Math.Sin(t + p_angleTravelled / 2);
+                propagatedParticles[i].t = particles[i].t + p_angleTravelled;
+
+                propagatedParticles[i].t = boundAngle(propagatedParticles[i].t, 1);
+
+            }
+
+
+            for (int i = 0; i < numParticles; i++)
+            {
+                CalculateWeight(i);
+            }
+
+            for (int i = 0;
+
+            x_est = 0; y_est = 0; t_est = 0;
+            
 
             // ****************** Additional Student Code: End   ************
 
@@ -797,12 +822,20 @@ namespace DrRobot.JaguarControl
 
         void CalculateWeight(int p)
         {
-	        double weight = 0;
-
+            double expectedMeasurement = 0;
+            double weight = 0;
 	        // ****************** Additional Student Code: Start ************
+            for (int i = 0; i < LaserData.Length; i++)
+            {
+                expectedMeasurement = map.GetClosestWallDistance(particles[p].x, particles[p].y, particles[p].t + laserAngles[i]);
+                if (expectedMeasurement < 99999)
+                {
+                    weight += Math.Abs(expectedMeasurement - LaserData[i]);
+                }
 
-	        // Put code here to calculated weight. Feel free to use the
-	        // function map.GetClosestWallDistance from Map.cs.
+            }
+
+            particles[p].w = 1/weight;
 
         }
 
@@ -836,6 +869,8 @@ namespace DrRobot.JaguarControl
         // in the environement. Should work for rectangular environments to make 
         // things easier.
 
+        Random myRandom = new Random();
+
         void SetRandomPos(int p){
 
 	        // ****************** Additional Student Code: Start ************
@@ -844,9 +879,12 @@ namespace DrRobot.JaguarControl
             // particles[p]. Feel free to use the random.NextDouble() function. 
 	        // It might be helpful to use boundaries defined in the
 	        // Map.cs file (e.g. map.minX)
-	        
 
+            particles[p].x = map.minX + myRandom.NextDouble()*(map.maxX - map.minX);
+            particles[p].y = map.minY + myRandom.NextDouble() * (map.maxY - map.minY);
+            particles[p].t = myRandom.NextDouble() * Math.PI * 2;
 
+            particles[p].w = 1 / numParticles;
 
             // ****************** Additional Student Code: End   ************
         }
