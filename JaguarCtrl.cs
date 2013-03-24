@@ -332,6 +332,7 @@ namespace DrRobot.JaguarControl
             this.Focus();
         }
 
+
         private void JaguarCtrl_FormClosed(object sender, FormClosedEventArgs e)
         {
             myAMC.Stop();
@@ -1241,6 +1242,23 @@ namespace DrRobot.JaguarControl
         private void myAMC_OnError(object sender, AxAXISMEDIACONTROLLib._IAxisMediaControlEvents_OnErrorEvent e)
         {
 
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            navigation.correctionOverride = true;
+        }
+
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+            if (((CheckBox)sender).Checked)
+            {
+                navigation.correctionOverrideEnabled = true;
+            }
+            else
+            {
+                navigation.correctionOverrideEnabled = false;
+            }
         }
 
     }

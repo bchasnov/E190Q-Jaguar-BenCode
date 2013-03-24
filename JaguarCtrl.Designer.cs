@@ -112,6 +112,8 @@
             this.label19 = new System.Windows.Forms.Label();
             this.checkBoxKnownStart = new System.Windows.Forms.CheckBox();
             this.text1 = new System.Windows.Forms.Label();
+            this.button1 = new System.Windows.Forms.Button();
+            this.CorrectionOverride = new System.Windows.Forms.CheckBox();
             this.groupBoxGPSIMU.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.realJaguar)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxIMUGPS)).BeginInit();
@@ -1046,12 +1048,35 @@
             this.text1.TabIndex = 74;
             this.text1.Text = "Distance";
             // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(755, 13);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(65, 25);
+            this.button1.TabIndex = 75;
+            this.button1.Text = "Correction";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
+            // CorrectionOverride
+            // 
+            this.CorrectionOverride.AutoSize = true;
+            this.CorrectionOverride.Location = new System.Drawing.Point(827, 16);
+            this.CorrectionOverride.Name = "CorrectionOverride";
+            this.CorrectionOverride.Size = new System.Drawing.Size(66, 17);
+            this.CorrectionOverride.TabIndex = 76;
+            this.CorrectionOverride.Text = "Override";
+            this.CorrectionOverride.UseVisualStyleBackColor = true;
+            this.CorrectionOverride.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
+            // 
             // JaguarCtrl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ControlLight;
             this.ClientSize = new System.Drawing.Size(1016, 698);
+            this.Controls.Add(this.CorrectionOverride);
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.text1);
             this.Controls.Add(this.txtNumParticles);
             this.Controls.Add(this.label19);
@@ -1220,6 +1245,8 @@
         private System.Windows.Forms.Label label19;
         private System.Windows.Forms.CheckBox checkBoxKnownStart;
         private System.Windows.Forms.Label text1;
+        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.CheckBox CorrectionOverride;
     }
 }
 

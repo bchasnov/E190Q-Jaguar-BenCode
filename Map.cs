@@ -41,14 +41,14 @@ namespace DrRobot.JaguarControl
             mapSegmentCorners[0, 1, 0] = -3.38 - 5.79 - 3.55 / 2;
             mapSegmentCorners[0, 1, 1] = 2.794;
 
-	        mapSegmentCorners[1,0,0] = -3.55/2;
+	        mapSegmentCorners[1,0,0] = -3.54/2;
 	        mapSegmentCorners[1,0,1] = 0.0;
-	        mapSegmentCorners[1,1,0] = -3.55/2;
+	        mapSegmentCorners[1,1,0] = -3.56/2;
 	        mapSegmentCorners[1,1,1] = -2.74;
 
-	        mapSegmentCorners[2,0,0] = 3.55/2;
+	        mapSegmentCorners[2,0,0] = 3.54/2;
 	        mapSegmentCorners[2,0,1] = 0.0;
-	        mapSegmentCorners[2,1,0] = 3.55/2;
+	        mapSegmentCorners[2,1,0] = 3.56/2;
 	        mapSegmentCorners[2,1,1] = -2.74;
 
             mapSegmentCorners[3, 0, 0] = 3.55/2;
@@ -109,7 +109,7 @@ namespace DrRobot.JaguarControl
 	        double Y1 = mapSegmentCorners[segment,0,1];
 	        double X2 = mapSegmentCorners[segment,1,0];
 	        double Y2 = mapSegmentCorners[segment,1,1];
-	        double dist = 9999;
+            double dist = 0;
 
 	        //Range t
 	        if (t>Math.PI) t -= 2*Math.PI; else if (t<-Math.PI) t += 2*Math.PI;
@@ -120,14 +120,15 @@ namespace DrRobot.JaguarControl
             double intersect_x = (intercepts[segment] + Math.Tan(t) * x - y) / (Math.Tan(t) - slopes[segment]);
             double intersect_y = slopes[segment] * intersect_x + intercepts[segment];
 
-
-            if (inRange(intersect_x, X1, X2) && inRange(intersect_y, Y1, Y2))
+            if (inRange(intersect_x, X1, X2) && inRange(intersect_y, Y1, Y2)&& inFront(intersect_x - x, intersect_y - y, t))
             {
                 dist = pythagorean(x - intersect_x, y - intersect_y);
+                //Console.WriteLine("seg: " + segment + "interx:" + intersect_x + " intery:" + intersect_y);
+                //inFront(intersect_x - x, intersect_y - y, t);
             }
             else
             {
-                dist = 99999;
+                dist = 0;
             }
 	        // ****************** Additional Student Code: End   ************
 
@@ -137,6 +138,14 @@ namespace DrRobot.JaguarControl
         private Boolean inRange(double a, double one, double two)
         {
             return (a <= Math.Max(one, two) && a >= Math.Min(one, two));
+        }
+
+        private Boolean inFront(double dx, double dy, double t)
+        {
+            //t = Navigation.boundAngle(t, 2);
+            //Console.WriteLine("   dx "+dx+" dy "+dy+" atan " + Math.Atan2(dy, dx) +" t " + t);
+            if (Math.Abs(Math.Atan2(dy, dx) - t) < 0.01) return true;
+            return false;
         }
 
         private double pythagorean(double a, double b)
@@ -149,17 +158,28 @@ namespace DrRobot.JaguarControl
 
         public double GetClosestWallDistance(double x, double y, double t){
 
-	        double minDist = 6.000;
-
-	        // ****************** Additional Student Code: Start ************
+	        double minDist = 9999999;
+            double dist = 0;
+            int seg = 0;
+            // ****************** Additional Student Code: Start ************
 
             for (int i = 0; i < numMapSegments; i++)
             {
-                minDist = Math.Min(minDist, GetWallDistance(x, y, t, i));
+                dist = GetWallDistance(x, y, t, i);
+                if (dist > 0)
+                {
+                    minDist = Math.Min(minDist, dist);
+                    if (minDist == dist)
+                        seg = i;
+                }
             }
 
 	        // ****************** Additional Student Code: End   ************
 
+            if (minDist == 9999999)
+                minDist = 0;
+
+            //Console.WriteLine("seg:"+seg);
 	        return minDist;
         }
 
