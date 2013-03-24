@@ -1238,5 +1238,10 @@ namespace DrRobot.JaguarControl
 
         # endregion
 
+        private void myAMC_OnError(object sender, AxAXISMEDIACONTROLLib._IAxisMediaControlEvents_OnErrorEvent e)
+        {
+
+        }
+
     }
 }

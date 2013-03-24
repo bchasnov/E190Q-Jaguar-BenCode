@@ -798,16 +798,34 @@ namespace DrRobot.JaguarControl
                 propagatedParticles[i].t = boundAngle(propagatedParticles[i].t, 1);
 
             }
-
-
-            for (int i = 0; i < numParticles; i++)
+            if (!newLaserData)
             {
-                CalculateWeight(i);
+                //calculate unnormalized weight
+                for (int i = 0; i < numParticles; i++)
+                {
+                    CalculateWeight(i);
+                }
+
+                //calculate normalized weight
+                double maxWeight = 0;
+                for (int i = 0; i < numParticles; i++)
+                {
+                    maxWeight = Math.Max(propagatedParticles[i].w, maxWeight);
+                }
+
+                for (int i = 0; i < numParticles; i++)
+                {
+                    propagatedParticles[i].w = propagatedParticles[i].w / maxWeight;
+                }
+
+                for (int i = 0; i < numParticles; i++)
+                {
+                    x_est += propagatedParticles[i].x;
+                    y_est += propagatedParticles[i].y;
+                }
+                x_est = x_est/numParticles; 
+                y_est = y_est/numParticles; t_est = 0;
             }
-
-            for (int i = 0;
-
-            x_est = 0; y_est = 0; t_est = 0;
             
 
             // ****************** Additional Student Code: End   ************
@@ -827,7 +845,7 @@ namespace DrRobot.JaguarControl
 	        // ****************** Additional Student Code: Start ************
             for (int i = 0; i < LaserData.Length; i++)
             {
-                expectedMeasurement = map.GetClosestWallDistance(particles[p].x, particles[p].y, particles[p].t + laserAngles[i]);
+                expectedMeasurement = map.GetClosestWallDistance(propagatedParticles[p].x, propagatedParticles[p].y, propagatedParticles[p].t + laserAngles[i]);
                 if (expectedMeasurement < 99999)
                 {
                     weight += Math.Abs(expectedMeasurement - LaserData[i]);
@@ -835,7 +853,7 @@ namespace DrRobot.JaguarControl
 
             }
 
-            particles[p].w = 1/weight;
+            propagatedParticles[p].w = 1 / weight;
 
         }
 

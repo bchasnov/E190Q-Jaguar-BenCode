@@ -455,6 +455,7 @@
             this.myAMC.OcxState = ((System.Windows.Forms.AxHost.State)(resources.GetObject("myAMC.OcxState")));
             this.myAMC.Size = new System.Drawing.Size(460, 372);
             this.myAMC.TabIndex = 1;
+            this.myAMC.OnError += new AxAXISMEDIACONTROLLib._IAxisMediaControlEvents_OnErrorEventHandler(this.myAMC_OnError);
             // 
             // btnScan
             // 
@@ -598,7 +599,7 @@
             // btnSetStartPoint
             // 
             this.btnSetStartPoint.Font = new System.Drawing.Font("Arial", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnSetStartPoint.Location = new System.Drawing.Point(394, 426);
+            this.btnSetStartPoint.Location = new System.Drawing.Point(394, 423);
             this.btnSetStartPoint.Name = "btnSetStartPoint";
             this.btnSetStartPoint.Size = new System.Drawing.Size(90, 25);
             this.btnSetStartPoint.TabIndex = 25;
