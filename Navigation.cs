@@ -10,6 +10,9 @@ namespace DrRobot.JaguarControl
     public class Navigation
     {
         #region Navigation Variables
+
+        private DateTime globalLoopTime;
+
         public long[] LaserData = new long[DrRobot.JaguarControl.JaguarCtrl.DISDATALEN];
         public double initialX=0, initialY=0, initialT=1.57;
         public double x, y, t;
@@ -235,6 +238,8 @@ namespace DrRobot.JaguarControl
             // Run infinite Control Loop
             while (runThread)
             {
+                globalLoopTime = DateTime.Now;
+
                 // ****************** Additional Student Code: Start ************
 
                 // Students can select what type of localization and control
@@ -307,7 +312,12 @@ namespace DrRobot.JaguarControl
                 LogData();
 
                 // Sleep to approximate 20 Hz update rate
-                Thread.Sleep(deltaT); //not sure if this works anymore..... -wf
+                while ((DateTime.Now- globalLoopTime).Milliseconds < deltaT)
+                {
+
+                    Thread.Sleep(1);
+                }
+                //Thread.Sleep(deltaT); //not sure if this works anymore..... -wf
             }
         }
 
@@ -784,6 +794,15 @@ namespace DrRobot.JaguarControl
             // ****************** Additional Student Code: End   ************
         }
 
+        DateTime prevTime = DateTime.Now;
+        void ttime(string str)
+        {
+            DateTime tmpTime = prevTime;
+            prevTime = DateTime.Now;
+            Console.WriteLine(">>"+str);
+            Console.WriteLine(">>t=" + (prevTime - tmpTime).Milliseconds);
+        }
+
 
         public void LocalizeEstWithParticleFilter()
         {
@@ -801,7 +820,8 @@ namespace DrRobot.JaguarControl
             double p_angleTravelled = 0;
 
             //Propagate particles with randomness
-            Console.WriteLine("prediction");
+            Console.WriteLine("prediction "+time);
+            ttime("start");
             for (int i = 0; i < numParticles; i++)
             {
                 // distance = r*theta where r=wheelRadius and theta=2*pi*encoderMeasurement/pulsesPerRevolution
@@ -819,7 +839,7 @@ namespace DrRobot.JaguarControl
                 propagatedParticles[i].t = boundAngle(propagatedParticles[i].t, 1);
 
             }
-
+            ttime("prediction");
             if (newLaserData && ((!correctionOverrideEnabled) || (correctionOverrideEnabled && correctionOverride)))
             {
                 Console.WriteLine("Correction Step");
@@ -829,14 +849,13 @@ namespace DrRobot.JaguarControl
                 {
                     CalculateWeight(i);
                 }
-
+                ttime("calculate weight");
                 //calculate normalized weight
-                double maxWeight = 0;
+                double maxWeight = 0.01;
                 for (int i = 0; i < numParticles; i++)
                 {
                     maxWeight = Math.Max(propagatedParticles[i].w, maxWeight);
                 }
-
                 for (int i = 0; i < numParticles; i++)
                 {
                     propagatedParticles[i].w = propagatedParticles[i].w / maxWeight;
@@ -844,7 +863,7 @@ namespace DrRobot.JaguarControl
                 }
                 Console.WriteLine();
 
-
+                ttime("normalize");
 
                 //correction step
                 tempParticlesCount = 0;
@@ -872,6 +891,7 @@ namespace DrRobot.JaguarControl
                     }
                 }
 
+
                 for (int i = 0; i < numParticles; i++)
                 {
                     int r = (int)(tempParticlesCount * myRandom.NextDouble());
@@ -880,6 +900,7 @@ namespace DrRobot.JaguarControl
                     propagatedParticles[i].t = tempParticles[r].t;
                 }
                 tempParticlesCount = 0;
+                ttime("redistribute");
             }
             else { Console.WriteLine("skipped correction"); }
 
@@ -929,9 +950,10 @@ namespace DrRobot.JaguarControl
             double weight = 0;
             int n = 0;
 	        // ****************** Additional Student Code: Start ************
-            for (int i = 0; i < LaserData.Length; i+=21)
+            for (int i = 0; i < LaserData.Length; i+=60)
             {
-                expectedMeasurement = (int)1000*map.GetClosestWallDistance(propagatedParticles[p].x, propagatedParticles[p].y, propagatedParticles[p].t  -1.57 + laserAngles[i]);
+                expectedMeasurement = (int)1000 * map.GetClosestWallDistance(propagatedParticles[p].x, propagatedParticles[p].y, propagatedParticles[p].t - 1.570796327
+ + laserAngles[i]);
                 if (expectedMeasurement > 0 && LaserData[i] > 0)
                 {
                     n++;
@@ -940,7 +962,7 @@ namespace DrRobot.JaguarControl
 
                 if (p == 0)
                 {
-                    Console.WriteLine(p + "," + expectedMeasurement + "," + LaserData[i] + "," + weight);
+                    //Console.WriteLine(p + "," + expectedMeasurement + "," + LaserData[i] + "," + weight);
                 }
 
             }
