@@ -109,7 +109,7 @@ namespace DrRobot.JaguarControl
 	        double Y1 = mapSegmentCorners[segment,0,1];
 	        double X2 = mapSegmentCorners[segment,1,0];
 	        double Y2 = mapSegmentCorners[segment,1,1];
-            double dist = 0;
+            double dist = 0.000;
 
 	        //Range t
 	        if (t>Math.PI) t -= 2*Math.PI; else if (t<-Math.PI) t += 2*Math.PI;
@@ -125,10 +125,6 @@ namespace DrRobot.JaguarControl
                 dist = pythagorean(x - intersect_x, y - intersect_y);
                 //Console.WriteLine("seg: " + segment + "interx:" + intersect_x + " intery:" + intersect_y);
                 //inFront(intersect_x - x, intersect_y - y, t);
-            }
-            else
-            {
-                dist = 0;
             }
 	        // ****************** Additional Student Code: End   ************
 

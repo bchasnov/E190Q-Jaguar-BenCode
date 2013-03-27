@@ -88,7 +88,7 @@ namespace DrRobot.JaguarControl
         public Particle[] tempParticles;
         public int tempParticlesCount = 0;
         public int numParticles = 1000;
-        public double K_wheelRandomness = 0.15;//0.15;//0.25
+        public double K_wheelRandomness = 0.3;//0.15;//0.25
         public Random random = new Random();
         public bool newLaserData = false;
         public double laserMaxRange = 4.0;
@@ -96,6 +96,8 @@ namespace DrRobot.JaguarControl
         public double[] laserAngles;
         private int laserCounter;
         private int laserStepSize = 3;
+
+        private int redistributeFactor = 4;
 
         public Boolean correctionOverrideEnabled = false;
         public Boolean correctionOverride = false;
@@ -124,7 +126,7 @@ namespace DrRobot.JaguarControl
             map = new Map();
             particles = new Particle[numParticles];
             propagatedParticles = new Particle[numParticles];
-            tempParticles = new Particle[numParticles * 4];
+            tempParticles = new Particle[numParticles * redistributeFactor];
             // Create particles
             for (int i = 0; i < numParticles; i++)
             {
@@ -132,7 +134,7 @@ namespace DrRobot.JaguarControl
                 propagatedParticles[i] = new Particle();
             }
 
-            for (int i = 0; i < numParticles * 4; i++)
+            for (int i = 0; i < numParticles * redistributeFactor; i++)
             {
                 tempParticles[i] = new Particle();
             }
@@ -309,7 +311,7 @@ namespace DrRobot.JaguarControl
                 // ****************** Additional Student Code: End   ************
 
                 // Log data
-                LogData();
+                //LogData();
 
                 // Sleep to approximate 20 Hz update rate
                 while ((DateTime.Now- globalLoopTime).Milliseconds < deltaT)
@@ -520,7 +522,12 @@ namespace DrRobot.JaguarControl
             {
                 TimeSpan ts = DateTime.Now - startTime;
                 time = ts.TotalSeconds;
-                 String newData = time.ToString() + " " + x.ToString() + " " + y.ToString() + " " + t.ToString() ;
+                String weights = "";
+                for (int i = 0; i < numParticles; i++)
+                {
+                    weights += propagatedParticles[i].w + " ";
+                }
+                String newData = time.ToString() + " " + weights;//;" " + x.ToString() + " " + y.ToString() + " " + t.ToString() ;
 
                 logFile.WriteLine(newData);
             }
@@ -852,6 +859,7 @@ namespace DrRobot.JaguarControl
                 ttime("calculate weight");
                 //calculate normalized weight
                 double maxWeight = 0.01;
+
                 for (int i = 0; i < numParticles; i++)
                 {
                     maxWeight = Math.Max(propagatedParticles[i].w, maxWeight);
@@ -861,36 +869,42 @@ namespace DrRobot.JaguarControl
                     propagatedParticles[i].w = propagatedParticles[i].w / maxWeight;
                     //Console.Write(propagatedParticles[i].w+" ");
                 }
+                LogData();
                 Console.WriteLine();
 
                 ttime("normalize");
 
                 //correction step
                 tempParticlesCount = 0;
-                double[] c = { 0.25, 0.5, 0.75, 1 };
+                double[] c = {0.1, 0.25, 0.5, 0.75, 1 };
                 for (int i = 0; i < numParticles; i++)
                 {
-                    if (propagatedParticles[i].w < c[0])
+                    /*if (propagatedParticles[i].w < c[0])
+                    {
+                        copyParticleIntoTemp(i, 0);
+                        continue;
+                    }*/
+                    if (propagatedParticles[i].w < c[1])
                     {
                         copyParticleIntoTemp(i, 1);
                         continue;
                     }
-                    if (propagatedParticles[i].w < c[1])
+                    if (propagatedParticles[i].w < c[2])
                     {
                         copyParticleIntoTemp(i, 2);
                         continue;
                     }
-                    if (propagatedParticles[i].w < c[2])
+                    if (propagatedParticles[i].w < c[3])
                     {
                         copyParticleIntoTemp(i, 3);
                         continue;
                     }
-                    if (propagatedParticles[i].w <= c[3])
+                    if (propagatedParticles[i].w <= c[4])
                     {
                         copyParticleIntoTemp(i, 4);
                     }
                 }
-
+                //fillTempWithRandomness();
 
                 for (int i = 0; i < numParticles; i++)
                 {
@@ -901,6 +915,7 @@ namespace DrRobot.JaguarControl
                 }
                 tempParticlesCount = 0;
                 ttime("redistribute");
+
             }
             else { Console.WriteLine("skipped correction"); }
 
@@ -936,6 +951,28 @@ namespace DrRobot.JaguarControl
                 tempParticles[tempParticlesCount].t = propagatedParticles[p].t;
                 tempParticlesCount += 1;
             }
+            
+        }
+
+        private void fillTempWithRandomness()
+        {
+            double percentRandomness = 0.1;
+            int numRandomness = (int)(tempParticlesCount*percentRandomness);
+            while (tempParticlesCount < numParticles*4 && numRandomness > 0)//*(redistributeFactor-2))
+            {
+                /*
+                tempParticles[tempParticlesCount].x = x_est + RandomGaussian() * 0.1;
+                tempParticles[tempParticlesCount].y = y_est + RandomGaussian() * 0.1;
+                tempParticles[tempParticlesCount].t = t_est + RandomGaussian() * Math.PI / 100;
+                */
+
+                tempParticles[tempParticlesCount].x = map.minX + myRandom.NextDouble() * (map.maxX - map.minX);
+                tempParticles[tempParticlesCount].y = map.minY + myRandom.NextDouble() * (map.maxY - map.minY);
+                tempParticles[tempParticlesCount].t = myRandom.NextDouble() * Math.PI * 2;
+
+                tempParticlesCount++;
+                numRandomness--;
+            }
         }
 
         // Particle filters work by setting the weight associated with each
@@ -946,28 +983,35 @@ namespace DrRobot.JaguarControl
 
         void CalculateWeight(int p)
         {
-            double expectedMeasurement = 0;
+            long expectedMeasurement = 0;
             double weight = 0;
             int n = 0;
+            int sigma = 100000;
+
 	        // ****************** Additional Student Code: Start ************
-            for (int i = 0; i < LaserData.Length; i+=60)
+            for (int i = 0; i < LaserData.Length; i+=21)
             {
-                expectedMeasurement = (int)1000 * map.GetClosestWallDistance(propagatedParticles[p].x, propagatedParticles[p].y, propagatedParticles[p].t - 1.570796327
- + laserAngles[i]);
+                expectedMeasurement = (long)(1000 * map.GetClosestWallDistance(propagatedParticles[p].x, propagatedParticles[p].y, propagatedParticles[p].t - 1.570796327
+ + laserAngles[i]));
+                
+                //n++;
+                //weight *= (1.0 / Math.Sqrt(2 * Math.PI * sigma)) * Math.Exp(-Math.Pow(expectedMeasurement - LaserData[i], 2) / (Math.Pow(sigma, 2)*2));//Math.Pow(expectedMeasurement - LaserData[i],2)/1000;
+
+
                 if (expectedMeasurement > 0 && LaserData[i] > 0)
                 {
                     n++;
-                    weight += Math.Exp(-Math.Pow(expectedMeasurement - LaserData[i], 2));//Math.Pow(expectedMeasurement - LaserData[i],2)/1000;
+                    weight += Math.Pow(expectedMeasurement - LaserData[i], 2);
                 }
 
                 if (p == 0)
                 {
-                    //Console.WriteLine(p + "," + expectedMeasurement + "," + LaserData[i] + "," + weight);
+                    Console.WriteLine(p + "," + expectedMeasurement + "," + LaserData[i] + "," + weight);
                 }
 
             }
 
-            propagatedParticles[p].w = (weight/n);
+            propagatedParticles[p].w = Math.Exp(-(weight/n)/sigma);
 
         }
 
@@ -1002,6 +1046,7 @@ namespace DrRobot.JaguarControl
         // things easier.
 
         Random myRandom = new Random();
+        
 
         void SetRandomPos(int p){
 
