@@ -151,6 +151,10 @@ namespace DrRobot.JaguarControl
         public int MANUAL = 0;
         public int AUTONOMOUS = 1;
         public int controlMode = 0;
+        public int AUTO_TRACKTRAJ = 0;
+        public int AUTO_TRACKSETPOINT = 1;
+        public int autoMode = 0;
+
         private Thread sensorThread;
         public bool runSensorThread;
         #endregion
@@ -1234,7 +1238,7 @@ namespace DrRobot.JaguarControl
             {
             }
             controlMode = AUTONOMOUS;
-            //autoMode = AUTO_TRACKSETPOINT;
+            autoMode = AUTO_TRACKSETPOINT;
         }
 
         # endregion
@@ -1259,6 +1263,13 @@ namespace DrRobot.JaguarControl
             {
                 navigation.correctionOverrideEnabled = false;
             }
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            controlMode = AUTONOMOUS;
+            autoMode = AUTO_TRACKTRAJ;
+
         }
 
     }

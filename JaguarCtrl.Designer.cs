@@ -114,6 +114,7 @@
             this.text1 = new System.Windows.Forms.Label();
             this.button1 = new System.Windows.Forms.Button();
             this.CorrectionOverride = new System.Windows.Forms.CheckBox();
+            this.button2 = new System.Windows.Forms.Button();
             this.groupBoxGPSIMU.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.realJaguar)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxIMUGPS)).BeginInit();
@@ -601,7 +602,7 @@
             // btnSetStartPoint
             // 
             this.btnSetStartPoint.Font = new System.Drawing.Font("Arial", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnSetStartPoint.Location = new System.Drawing.Point(394, 423);
+            this.btnSetStartPoint.Location = new System.Drawing.Point(370, 422);
             this.btnSetStartPoint.Name = "btnSetStartPoint";
             this.btnSetStartPoint.Size = new System.Drawing.Size(90, 25);
             this.btnSetStartPoint.TabIndex = 25;
@@ -1008,7 +1009,7 @@
             // txtNumParticles
             // 
             this.txtNumParticles.Font = new System.Drawing.Font("Arial", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtNumParticles.Location = new System.Drawing.Point(341, 427);
+            this.txtNumParticles.Location = new System.Drawing.Point(317, 427);
             this.txtNumParticles.Name = "txtNumParticles";
             this.txtNumParticles.Size = new System.Drawing.Size(47, 20);
             this.txtNumParticles.TabIndex = 71;
@@ -1018,7 +1019,7 @@
             // 
             this.label19.Font = new System.Drawing.Font("Arial", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label19.ForeColor = System.Drawing.Color.Black;
-            this.label19.Location = new System.Drawing.Point(303, 428);
+            this.label19.Location = new System.Drawing.Point(277, 428);
             this.label19.Name = "label19";
             this.label19.Size = new System.Drawing.Size(59, 18);
             this.label19.TabIndex = 72;
@@ -1069,12 +1070,23 @@
             this.CorrectionOverride.UseVisualStyleBackColor = true;
             this.CorrectionOverride.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
             // 
+            // button2
+            // 
+            this.button2.Location = new System.Drawing.Point(466, 424);
+            this.button2.Name = "button2";
+            this.button2.Size = new System.Drawing.Size(26, 23);
+            this.button2.TabIndex = 77;
+            this.button2.Text = "button2";
+            this.button2.UseVisualStyleBackColor = true;
+            this.button2.Click += new System.EventHandler(this.button2_Click);
+            // 
             // JaguarCtrl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ControlLight;
             this.ClientSize = new System.Drawing.Size(1016, 698);
+            this.Controls.Add(this.button2);
             this.Controls.Add(this.CorrectionOverride);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.text1);
@@ -1247,6 +1259,7 @@
         private System.Windows.Forms.Label text1;
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.CheckBox CorrectionOverride;
+        private System.Windows.Forms.Button button2;
     }
 }
 
