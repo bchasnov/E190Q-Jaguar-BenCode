@@ -111,10 +111,6 @@
             this.txtNumParticles = new System.Windows.Forms.TextBox();
             this.label19 = new System.Windows.Forms.Label();
             this.checkBoxKnownStart = new System.Windows.Forms.CheckBox();
-            this.text1 = new System.Windows.Forms.Label();
-            this.button1 = new System.Windows.Forms.Button();
-            this.CorrectionOverride = new System.Windows.Forms.CheckBox();
-            this.button2 = new System.Windows.Forms.Button();
             this.groupBoxGPSIMU.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.realJaguar)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxIMUGPS)).BeginInit();
@@ -458,7 +454,6 @@
             this.myAMC.OcxState = ((System.Windows.Forms.AxHost.State)(resources.GetObject("myAMC.OcxState")));
             this.myAMC.Size = new System.Drawing.Size(460, 372);
             this.myAMC.TabIndex = 1;
-            this.myAMC.OnError += new AxAXISMEDIACONTROLLib._IAxisMediaControlEvents_OnErrorEventHandler(this.myAMC_OnError);
             // 
             // btnScan
             // 
@@ -602,7 +597,7 @@
             // btnSetStartPoint
             // 
             this.btnSetStartPoint.Font = new System.Drawing.Font("Arial", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnSetStartPoint.Location = new System.Drawing.Point(370, 422);
+            this.btnSetStartPoint.Location = new System.Drawing.Point(394, 426);
             this.btnSetStartPoint.Name = "btnSetStartPoint";
             this.btnSetStartPoint.Size = new System.Drawing.Size(90, 25);
             this.btnSetStartPoint.TabIndex = 25;
@@ -1009,7 +1004,7 @@
             // txtNumParticles
             // 
             this.txtNumParticles.Font = new System.Drawing.Font("Arial", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtNumParticles.Location = new System.Drawing.Point(317, 427);
+            this.txtNumParticles.Location = new System.Drawing.Point(341, 427);
             this.txtNumParticles.Name = "txtNumParticles";
             this.txtNumParticles.Size = new System.Drawing.Size(47, 20);
             this.txtNumParticles.TabIndex = 71;
@@ -1019,7 +1014,7 @@
             // 
             this.label19.Font = new System.Drawing.Font("Arial", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label19.ForeColor = System.Drawing.Color.Black;
-            this.label19.Location = new System.Drawing.Point(277, 428);
+            this.label19.Location = new System.Drawing.Point(303, 428);
             this.label19.Name = "label19";
             this.label19.Size = new System.Drawing.Size(59, 18);
             this.label19.TabIndex = 72;
@@ -1040,56 +1035,12 @@
             this.checkBoxKnownStart.UseVisualStyleBackColor = true;
             this.checkBoxKnownStart.CheckStateChanged += new System.EventHandler(this.checkBoxKnownStart_CheckedChanged);
             // 
-            // text1
-            // 
-            this.text1.AutoSize = true;
-            this.text1.Location = new System.Drawing.Point(548, 21);
-            this.text1.Name = "text1";
-            this.text1.Size = new System.Drawing.Size(49, 13);
-            this.text1.TabIndex = 74;
-            this.text1.Text = "Distance";
-            // 
-            // button1
-            // 
-            this.button1.Location = new System.Drawing.Point(755, 13);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(65, 25);
-            this.button1.TabIndex = 75;
-            this.button1.Text = "Correction";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
-            // 
-            // CorrectionOverride
-            // 
-            this.CorrectionOverride.AutoSize = true;
-            this.CorrectionOverride.Location = new System.Drawing.Point(827, 16);
-            this.CorrectionOverride.Name = "CorrectionOverride";
-            this.CorrectionOverride.Size = new System.Drawing.Size(66, 17);
-            this.CorrectionOverride.TabIndex = 76;
-            this.CorrectionOverride.Text = "Override";
-            this.CorrectionOverride.UseVisualStyleBackColor = true;
-            this.CorrectionOverride.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
-            // 
-            // button2
-            // 
-            this.button2.Location = new System.Drawing.Point(466, 424);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(26, 23);
-            this.button2.TabIndex = 77;
-            this.button2.Text = "button2";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.button2_Click);
-            // 
             // JaguarCtrl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ControlLight;
             this.ClientSize = new System.Drawing.Size(1016, 698);
-            this.Controls.Add(this.button2);
-            this.Controls.Add(this.CorrectionOverride);
-            this.Controls.Add(this.button1);
-            this.Controls.Add(this.text1);
             this.Controls.Add(this.txtNumParticles);
             this.Controls.Add(this.label19);
             this.Controls.Add(this.txtStartTheta);
@@ -1256,10 +1207,6 @@
         public System.Windows.Forms.TextBox txtNumParticles;
         private System.Windows.Forms.Label label19;
         private System.Windows.Forms.CheckBox checkBoxKnownStart;
-        private System.Windows.Forms.Label text1;
-        private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.CheckBox CorrectionOverride;
-        private System.Windows.Forms.Button button2;
     }
 }
 

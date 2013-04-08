@@ -55,6 +55,8 @@ namespace DrRobot.JaguarControl
         private static Pen whitePen = new Pen(Color.White, 10);
         private static Pen thinWhitePen = new Pen(Color.White, 1);
         private static Pen goldPen = new Pen(Color.Gold, 1);
+        private static Pen milestonePen = new Pen(Color.White, 2);
+        private static Pen trajPen = new Pen(Color.Cyan, 2);
         private static Pen trackPen = new Pen(Brushes.LightGray);
         private static Pen wallPen = new Pen(Brushes.LightGray, 4);
         private static Pen particlePen = new Pen(Brushes.Red, 1);
@@ -151,10 +153,6 @@ namespace DrRobot.JaguarControl
         public int MANUAL = 0;
         public int AUTONOMOUS = 1;
         public int controlMode = 0;
-        public int AUTO_TRACKTRAJ = 0;
-        public int AUTO_TRACKSETPOINT = 1;
-        public int autoMode = 0;
-
         private Thread sensorThread;
         public bool runSensorThread;
         #endregion
@@ -267,7 +265,17 @@ namespace DrRobot.JaguarControl
                 g.DrawLine(thinWhitePen, (float)(xCenter + 0.1 * mapResolution), (float)(yCenter - 1.4 * mapResolution),
                     (float)(xCenter + 0.0 * mapResolution), (float)(yCenter - 1.5 * mapResolution));
 
+                // Draw PRM milestones
+                for (int i = 0; i < navigation.numNodes; i++)
+                {
+                    g.DrawEllipse(milestonePen, xCenter + (float)navigation.nodeList[i].x * (float)mapResolution, yCenter - (float)navigation.nodeList[i].y * (float)mapResolution, 2, 2);
+                    g.DrawLine(milestonePen, xCenter + (float)navigation.nodeList[i].x * (float)mapResolution, yCenter - (float)navigation.nodeList[i].y * (float)mapResolution, xCenter + (float)navigation.nodeList[navigation.nodeList[i].lastNode].x * (float)mapResolution, yCenter - (float)navigation.nodeList[navigation.nodeList[i].lastNode].y * (float)mapResolution);
+                }
 
+                // Draw Trajectory
+                for (int i = 0; i < navigation.trajSize - 1; i++)
+                    g.DrawLine(trajPen, xCenter + (float)navigation.trajList[i].x * (float)mapResolution, yCenter - (float)navigation.trajList[i].y * (float)mapResolution,
+                         xCenter + (float)navigation.trajList[i + 1].x * (float)mapResolution, yCenter - (float)navigation.trajList[i + 1].y * (float)mapResolution);
                 // Draw Robot
                 int xShift = (int)(mapResolution * navigation.x);
                 int yShift = (int)(mapResolution * navigation.y);
@@ -335,7 +343,6 @@ namespace DrRobot.JaguarControl
             drRobotConnect.Hide ();
             this.Focus();
         }
-
 
         private void JaguarCtrl_FormClosed(object sender, FormClosedEventArgs e)
         {
@@ -1223,6 +1230,7 @@ namespace DrRobot.JaguarControl
         private void btnReset_Click(object sender, EventArgs e)
         {
             navigation.numParticles = int.Parse(txtNumParticles.Text);
+            controlMode = MANUAL;
             navigation.Reset();
         }
         
@@ -1237,40 +1245,11 @@ namespace DrRobot.JaguarControl
             catch
             {
             }
+            navigation.motionPlanRequired = true;
             controlMode = AUTONOMOUS;
-            autoMode = AUTO_TRACKSETPOINT;
         }
 
         # endregion
-
-        private void myAMC_OnError(object sender, AxAXISMEDIACONTROLLib._IAxisMediaControlEvents_OnErrorEvent e)
-        {
-
-        }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-            navigation.correctionOverride = true;
-        }
-
-        private void checkBox1_CheckedChanged(object sender, EventArgs e)
-        {
-            if (((CheckBox)sender).Checked)
-            {
-                navigation.correctionOverrideEnabled = true;
-            }
-            else
-            {
-                navigation.correctionOverrideEnabled = false;
-            }
-        }
-
-        private void button2_Click(object sender, EventArgs e)
-        {
-            controlMode = AUTONOMOUS;
-            autoMode = AUTO_TRACKTRAJ;
-
-        }
 
     }
 }
