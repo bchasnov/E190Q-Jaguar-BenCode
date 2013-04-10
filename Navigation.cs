@@ -9,6 +9,9 @@ namespace DrRobot.JaguarControl
 {
     public class Navigation
     {
+
+        private DateTime globalLoopTime;
+
         #region Navigation Variables
         public long[] LaserData = new long[DrRobot.JaguarControl.JaguarCtrl.DISDATALEN];
         public double initialX, initialY, initialT;
@@ -73,10 +76,11 @@ namespace DrRobot.JaguarControl
         public double accCalib_x = 18;
         public double accCalib_y = 4;
 
-        // PF Variables
         public Map map;
         public Particle[] particles;
-        public Particle[] propagatedParticles;
+        //public Particle[] propagatedParticles;
+        public Particle[] tempParticles;
+        public int tempParticlesCount = 0;
         public int numParticles = 1000;
         public double K_wheelRandomness = 0.15;//0.25
         public Random random = new Random();
@@ -86,6 +90,11 @@ namespace DrRobot.JaguarControl
         public double[] laserAngles;
         private int laserCounter;
         private int laserStepSize = 3;
+        private int newLaserCounter = 0;
+        int redistributeFactor = 4;
+
+        public Boolean correctionOverrideEnabled = false;
+        public Boolean correctionOverride = false;
 
         public class Particle
         {
@@ -140,6 +149,14 @@ namespace DrRobot.JaguarControl
 
         #endregion
 
+        DateTime prevTime = DateTime.Now;
+        void ttime(string str)
+        {
+            DateTime tmpTime = prevTime;
+            prevTime = DateTime.Now;
+            Console.WriteLine(">>" + str);
+            Console.WriteLine(">>t=" + (prevTime - tmpTime).Milliseconds);
+        }
 
         #region Navigation Setup
         
@@ -151,14 +168,19 @@ namespace DrRobot.JaguarControl
             realJaguar = jc.realJaguar;
             simulatedJaguar = jc.simulatedJaguar;
             map = new Map();
-
-            // Create particles
             particles = new Particle[numParticles];
-            propagatedParticles = new Particle[numParticles];
+
+            tempParticles = new Particle[numParticles * redistributeFactor];
+            // Create particles
             for (int i = 0; i < numParticles; i++)
             {
                 particles[i] = new Particle();
-                propagatedParticles[i] = new Particle();
+                //propagatedParticles[i] = new Particle();
+            }
+
+            for (int i = 0; i < numParticles * redistributeFactor; i++)
+            {
+                tempParticles[i] = new Particle();
             }
 
             this.Initialize();
@@ -257,6 +279,8 @@ namespace DrRobot.JaguarControl
             // Run infinite Control Loop
             while (runThread)
             {
+                globalLoopTime = DateTime.Now;
+
                 // ****************** Additional Student Code: Start ************
 
                 // Students can select what type of localization and control
@@ -321,7 +345,10 @@ namespace DrRobot.JaguarControl
                 LogData();
 
                 // Sleep to approximate 20 Hz update rate
-                Thread.Sleep(deltaT); //not sure if this works anymore..... -wf
+                while ((DateTime.Now - globalLoopTime).Milliseconds < deltaT)
+                {
+                    Thread.Sleep(1);
+                }
             }
         }
 
@@ -559,13 +586,40 @@ namespace DrRobot.JaguarControl
         {
 
             // ****************** Additional Student Code: Start ************
+            // ****************** Additional Student Code: Start ************
+            int dir = 1;
 
-            // Put code here to calculate desiredRotRateR and 
-            // desiredRotRateL. Make sure the robot does not exceed 
-            // maxVelocity!!!!!!!!!!!!
+            double dx = desiredX - x_est;
+            double dy = desiredY - y_est;
 
-                desiredRotRateR = 0;
-                desiredRotRateL = 0;
+            double a = -1.0 * t_est + Math.Atan2(dy, dx);
+            if (a < -Math.PI / 2 || a > Math.PI / 2)
+            {
+                dir = -1;
+                a = -1.0 * t_est + Math.Atan2(-dy, -dx);
+            }
+
+            double p = Math.Sqrt(Math.Pow(dx, 2) + Math.Pow(dy, 2)); //distance away from setpoint
+            double b = -1.0 * t_est - a + desiredT;
+
+            double v = Kpho * p; //set velocity to v (m/s)
+            v = Math.Min(maxVelocity, v);
+            v = dir * v;
+            double w = Kalpha * a + Kbeta * b; //set rotation to w
+
+
+
+
+            double w2 = 0.5 * (w + v / robotRadius); //Left rotation
+            double w1 = 0.5 * (w - v / robotRadius); //Right rotation
+
+            double phi1 = -1.0 * robotRadius * w1 / wheelRadius;
+            double phi2 = robotRadius * w2 / wheelRadius;
+
+            double pulsePerMeter = pulsesPerRotation / (wheelRadius * 2 * Math.PI);
+
+            desiredRotRateL = (short)(phi1 * pulsePerMeter);
+            desiredRotRateR = (short)(phi2 * pulsePerMeter);
 
             // ****************** Additional Student Code: End   ************
         }
@@ -750,10 +804,46 @@ namespace DrRobot.JaguarControl
             // in the Robot.h file.
 
 
-            distanceTravelled = 0;
-            angleTravelled = 0;
+            diffEncoderPulseR = -(currentEncoderPulseR - lastEncoderPulseR);
+            diffEncoderPulseL = currentEncoderPulseL - lastEncoderPulseL;
 
-  
+            // If rollover occurs, this will measure the correct encoder difference
+            if (Math.Abs(diffEncoderPulseR) > 0.5 * encoderMax)
+            {
+                if (diffEncoderPulseR < 0)
+                {
+                    diffEncoderPulseR = -encoderMax - 1 - diffEncoderPulseR;
+                }
+                if (diffEncoderPulseR > 0)
+                {
+                    diffEncoderPulseR = encoderMax + 1 - diffEncoderPulseR;
+                }
+            }
+            if (Math.Abs(diffEncoderPulseL) > 0.5 * encoderMax)
+            {
+                if (diffEncoderPulseL < 0)
+                {
+                    diffEncoderPulseL = -encoderMax - 1 - diffEncoderPulseL;
+                }
+                if (diffEncoderPulseL > 0)
+                {
+                    diffEncoderPulseL = encoderMax + 1 - diffEncoderPulseL;
+                }
+            }
+
+
+            // distance = r*theta where r=wheelRadius and theta=2*pi*encoderMeasurement/pulsesPerRevolution
+            wheelDistanceR = wheelRadius * 2 * Math.PI * diffEncoderPulseR / pulsesPerRotation;
+            wheelDistanceL = wheelRadius * 2 * Math.PI * diffEncoderPulseL / pulsesPerRotation;
+
+            // Distance travelled is the average of the left and right wheel distances
+            distanceTravelled = (wheelDistanceL + wheelDistanceR) / 2;
+            angleTravelled = (wheelDistanceR - wheelDistanceL) / (2 * robotRadius);
+
+            //Save encoder value for next loop iteration
+            lastEncoderPulseL = currentEncoderPulseL;
+            lastEncoderPulseR = currentEncoderPulseR;
+
             
 
             // ****************** Additional Student Code: End   ************
@@ -766,12 +856,20 @@ namespace DrRobot.JaguarControl
         {
             // ****************** Additional Student Code: Start ************
 
-            // Put code here to calculate x,y,t based on odemetry 
-            // (i.e. using last x, y, t as well as angleTravelled and distanceTravelled).
-            // Make sure t stays between pi and -pi
-            // Update the actual
-            x = 0; y = 0; t = 0;
-            
+            x = x + distanceTravelled * Math.Cos(t + angleTravelled / 2);
+            y = y + distanceTravelled * Math.Sin(t + angleTravelled / 2);
+            t = t + angleTravelled;
+            //Console.WriteLine(t);
+
+            if (t > Math.PI)
+            {
+                t = t - 2 * Math.PI;
+            }
+            if (t < -1 * Math.PI)
+            {
+                t = t + 2 * Math.PI;
+            }
+
                 
             // ****************** Additional Student Code: End   ************
         }
@@ -790,7 +888,7 @@ namespace DrRobot.JaguarControl
             // ****************** Additional Student Code: End   ************
         }
 
-
+        double avgWeight;
         public void LocalizeEstWithParticleFilter()
         {
             // To start, just set the estimated to be the actual for simulations
@@ -798,16 +896,159 @@ namespace DrRobot.JaguarControl
             
 
             // ****************** Additional Student Code: Start ************
+            double p_wheelDistanceR = 0;
+            double p_wheelDistanceL = 0;
+            double p_distanceTravelled = 0;
+            double p_angleTravelled = 0;
 
-            // Put code here to calculate x_est, y_est, t_est using a PF
+            //Propagate particles with randomness
+            Console.WriteLine("prediction " + time);
+            ttime("start");
+            for (int i = 0; i < numParticles; i++)
+            {
+                // distance = r*theta where r=wheelRadius and theta=2*pi*encoderMeasurement/pulsesPerRevolution
+                p_wheelDistanceL = wheelDistanceL + wheelDistanceL * RandomGaussian() * K_wheelRandomness;
+                p_wheelDistanceR = wheelDistanceR + wheelDistanceR * RandomGaussian() * K_wheelRandomness;
 
-            
+                // Distance travelled is the average of the left and right wheel distances
+                p_distanceTravelled = (p_wheelDistanceL + p_wheelDistanceR) / 2;
+                p_angleTravelled = (p_wheelDistanceR - p_wheelDistanceL) / (2 * robotRadius);
 
-            x_est=0; y_est=0; t_est=0;
+                particles[i].x = particles[i].x + p_distanceTravelled * Math.Cos(particles[i].t + p_angleTravelled / 2);
+                particles[i].y = particles[i].y + p_distanceTravelled * Math.Sin(particles[i].t + p_angleTravelled / 2);
+                particles[i].t = particles[i].t + p_angleTravelled;
+
+                particles[i].t = boundAngle(particles[i].t, 1);
+
+            }
+            ttime("prediction");
+
+            Console.WriteLine(newLaserData + "<><>");
+            if (newLaserData)
+            {
+                newLaserCounter++;
+                //newLaserData = false;
+                Console.WriteLine(newLaserCounter + "<<<<<");
+            }
+
+            if (newLaserCounter > 2 && ((!correctionOverrideEnabled) || (correctionOverrideEnabled && correctionOverride)))
+            {
+                newLaserCounter = 0;
+                Console.WriteLine("Correction Step");
+                correctionOverride = false;
+                //calculate unnormalized weight
+                for (int i = 0; i < numParticles; i++)
+                {
+                    CalculateWeight(i);
+                }
+                ttime("calculate weight");
+                //calculate normalized weight
+                double maxWeight = 0.01;
+
+                avgWeight = 0;
+                for (int i = 0; i < numParticles; i++)
+                {
+                    maxWeight = Math.Max(particles[i].w, maxWeight);
+                    avgWeight += particles[i].w;
+                }
+                avgWeight = avgWeight / numParticles;
+                Console.WriteLine(avgWeight);
+                for (int i = 0; i < numParticles; i++)
+                {
+                    particles[i].w = particles[i].w / maxWeight;
+                    //Console.Write(propagatedParticles[i].w+" ");
+                }
+                //LogData();
+                Console.WriteLine();
+
+                ttime("normalize");
+
+                //correction step
+                //udacityResample();
+                approximateRedistribute();
+                //exactRedistribute();
+
+                ttime("resample");
+
+            }
+            else { Console.WriteLine("skipped correction"); }
+
+            //average to find the current robot state
+            for (int i = 0; i < numParticles; i++)
+            {
+                x_est += particles[i].x;
+                y_est += particles[i].y;
+                t_est += particles[i].t;
+            }
+            x_est = x_est / numParticles;
+            y_est = y_est / numParticles;
+            t_est = t_est / numParticles;
+
 
             // ****************** Additional Student Code: End   ************
 
         }
+
+        private void approximateRedistribute()
+        {
+            tempParticlesCount = 0;
+            double[] c = { 0.000001, 0.2, 0.4, 0.7, 1 };
+            for (int i = 0; i < numParticles; i++)
+            {
+                /*if (particles[i].w < c[0])
+                {
+                    particles[i].x = map.minX + myRandom.NextDouble() * (map.maxX - map.minX);
+                    particles[i].y = map.minY + myRandom.NextDouble() * (map.maxY - map.minY);
+                    particles[i].t = myRandom.NextDouble() * Math.PI * 2;
+
+                    copyParticleIntoTemp(i, 1);
+                    continue;
+                }*/
+                if (particles[i].w < c[1])
+                {
+                    copyParticleIntoTemp(i, 1);
+                    continue;
+                }
+                if (particles[i].w < c[2])
+                {
+                    copyParticleIntoTemp(i, 2);
+                    continue;
+                }
+                if (particles[i].w < c[3])
+                {
+                    copyParticleIntoTemp(i, 3);
+                    continue;
+                }
+                if (particles[i].w <= c[4])
+                {
+                    copyParticleIntoTemp(i, 4);
+                }
+            }
+            //fillTempWithRandomness();
+
+            for (int i = 0; i < numParticles; i++)
+            {
+                int r = (int)(tempParticlesCount * myRandom.NextDouble());
+                particles[i].x = tempParticles[r].x;
+                particles[i].y = tempParticles[r].y;
+                particles[i].t = tempParticles[r].t;
+            }
+            tempParticlesCount = 0;
+        }
+
+        private void copyParticleIntoTemp(int p, int n)
+        {
+            for (int i = 0; i < n; i++)
+            {
+                tempParticles[tempParticlesCount].x = particles[p].x;
+                tempParticles[tempParticlesCount].y = particles[p].y;
+                tempParticles[tempParticlesCount].t = particles[p].t;
+                tempParticlesCount += 1;
+            }
+
+        }
+
+
 
         // Particle filters work by setting the weight associated with each
         // particle, according to the difference between the real robot 
@@ -817,17 +1058,35 @@ namespace DrRobot.JaguarControl
 
         void CalculateWeight(int p)
         {
+            long expectedMeasurement = 0;
+            long weight = 0;
+            int n = 0;
+            int sigma = 100000;
 
             // ****************** Additional Student Code: Start ************
+            for (int i = 0; i < LaserData.Length; i += 18)
+            {
+                expectedMeasurement = (long)(1000 * map.GetClosestWallDistance(particles[p].x, particles[p].y, particles[p].t - 1.570796327
+ + laserAngles[i]));
 
-            // Put code here to calculate propagatedParticles[p].w. Feel free to use the
-            // function map.GetClosestWallDistance from Map.cs.
+                //n++;
+                //weight *= (1.0 / Math.Sqrt(2 * Math.PI * sigma)) * Math.Exp(-Math.Pow(expectedMeasurement - LaserData[i], 2) / (Math.Pow(sigma, 2)*2));//Math.Pow(expectedMeasurement - LaserData[i],2)/1000;
 
 
+                if (expectedMeasurement > 0 && LaserData[i] > 0)
+                {
+                    n++;
+                    weight += (expectedMeasurement - LaserData[i]) * (expectedMeasurement - LaserData[i]);
+                }
 
-            propagatedParticles[p].w = 0;
+                if (p == 0)
+                {
+                    //Console.WriteLine(p + "," + expectedMeasurement + "," + LaserData[i] + "," + weight);
+                }
 
-            // ****************** Additional Student Code: End   ************
+            }
+            if (n > 0)
+                particles[p].w = Math.Exp(-(weight / n) / sigma);
 
         }
 
@@ -837,21 +1096,23 @@ namespace DrRobot.JaguarControl
         // for particle filtering. It should pick a random location in the 
         // environment for each particle by calling SetRandomPos
 
-        void InitializeParticles() {
+        void InitializeParticles()
+        {
 
 
-	        // Set particles in random locations and orientations within environment
-	        for (int i=0; i< numParticles; i++){
+            // Set particles in random locations and orientations within environment
+            for (int i = 0; i < numParticles; i++)
+            {
 
-		        // Either set the particles at known start position [0 0 0],  
-		        // or set particles at random locations.
+                // Either set the particles at known start position [0 0 0],  
+                // or set particles at random locations.
 
                 if (jaguarControl.startMode == jaguarControl.UNKNOWN)
-    		        SetRandomPos(i);
+                    SetRandomPos(i);
                 else if (jaguarControl.startMode == jaguarControl.KNOWN)
-		            SetStartPos(i);
-	        }
-            
+                    SetStartPos(i);
+            }
+
         }
 
 
@@ -861,23 +1122,24 @@ namespace DrRobot.JaguarControl
         // in the environement. Should work for rectangular environments to make 
         // things easier.
 
-        void SetRandomPos(int p){
+        Random myRandom = new Random();
 
-	        // ****************** Additional Student Code: Start ************
 
-	        // Put code here to calculated the position, orientation of 
+        void SetRandomPos(int p)
+        {
+
+            // ****************** Additional Student Code: Start ************
+
+            // Put code here to calculated the position, orientation of 
             // particles[p]. Feel free to use the random.NextDouble() function. 
-	        // It might be helpful to use boundaries defined in the
-	        // Map.cs file (e.g. map.minX)
-           
+            // It might be helpful to use boundaries defined in the
+            // Map.cs file (e.g. map.minX)
 
+            particles[p].x = map.minX + myRandom.NextDouble() * (map.maxX - map.minX);
+            particles[p].y = map.minY + myRandom.NextDouble() * (map.maxY - map.minY);
+            particles[p].t = myRandom.NextDouble() * Math.PI * 2;
 
-            particles[p].x = 0;
-            particles[p].y = 0;
-            particles[p].t = 0;
-
-
-
+            particles[p].w = 1 / numParticles;
 
             // ****************** Additional Student Code: End   ************
         }
@@ -886,10 +1148,11 @@ namespace DrRobot.JaguarControl
 
 
         // For particle p, this function will select a start predefined position. 
-        void SetStartPos(int p){
-	        particles[p].x = initialX;
-	        particles[p].y = initialY;
-	        particles[p].t = initialT;
+        void SetStartPos(int p)
+        {
+            particles[p].x = initialX;
+            particles[p].y = initialY;
+            particles[p].t = initialT;
         }
 
 
@@ -900,18 +1163,18 @@ namespace DrRobot.JaguarControl
 
         double RandomGaussian()
         {
-	        double U1, U2, V1=0, V2;
-	        double S = 2.0;
-	        while(S >= 1.0) 
-	        {
-		        U1 = random.NextDouble();
+            double U1, U2, V1 = 0, V2;
+            double S = 2.0;
+            while (S >= 1.0)
+            {
+                U1 = random.NextDouble();
                 U2 = random.NextDouble();
-		        V1 = 2.0*U1-1.0;
-		        V2 = 2.0*U2-1.0;
-		        S = Math.Pow(V1,2) + Math.Pow(V2,2);
-	        }
-	        double gauss = V1*Math.Sqrt((-2.0*Math.Log(S))/S);
-	        return gauss;
+                V1 = 2.0 * U1 - 1.0;
+                V2 = 2.0 * U2 - 1.0;
+                S = Math.Pow(V1, 2) + Math.Pow(V2, 2);
+            }
+            double gauss = V1 * Math.Sqrt((-2.0 * Math.Log(S)) / S);
+            return gauss;
         }
 
 
@@ -919,12 +1182,33 @@ namespace DrRobot.JaguarControl
         // Get the sign of a number
         double Sgn(double a)
         {
-	        if (a>0)
+            if (a > 0)
                 return 1.0;
-	        else if (a<0)
+            else if (a < 0)
                 return -1.0;
-	        else
+            else
                 return 0.0;
+        }
+
+        #endregion
+
+        #region Misc. functions
+        static public double boundAngle(double theta, double sthPi)
+        {
+            //if sthpi is 2, then it bounds between 0 and 2pi
+            if (theta <= sthPi * Math.PI && theta >= sthPi * Math.PI - 2 * Math.PI)
+            {
+                return theta;
+            }
+            if (theta > sthPi * Math.PI)
+            {
+                theta -= 2 * Math.PI;
+            }
+            else if (theta < sthPi * Math.PI - 2 * Math.PI)
+            {
+                theta += 2 * Math.PI;
+            }
+            return boundAngle(theta, sthPi);
         }
 
         #endregion
