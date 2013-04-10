@@ -292,13 +292,21 @@ namespace DrRobot.JaguarControl
                 UpdateSensorMeasurements();
 
                 // Determine the change of robot position, orientation (lab 2)	
-                MotionPrediction();
+                Boolean moved = MotionPrediction();
 
-                // Update the global state of the robot - x,y,t (lab 2)
-                LocalizeRealWithOdometry();
+                if (moved || correctionOverride)
+                {
+                    Console.WriteLine("Tick");
+                    // Update the global state of the robot - x,y,t (lab 2)
+                    LocalizeRealWithOdometry();
+                    // Update the global state of the robot - x,y,t (lab 2)
+                    //LocalizeRealWithIMU();
 
-                // Estimate the global state of the robot -x_est, y_est, t_est (lab 4)
-                LocalizeEstWithParticleFilter();
+                    //Console.WriteLine(">"+x+","+y+","+t+","+map.GetClosestWallDistance(x, y, t));
+
+                    // Estimate the global state of the robot -x_est, y_est, t_est (lab 4)
+                    LocalizeEstWithParticleFilter();
+                }
 
 
                 // If using the point tracker, call the function
@@ -589,8 +597,9 @@ namespace DrRobot.JaguarControl
             // ****************** Additional Student Code: Start ************
             int dir = 1;
 
-            double dx = desiredX - x_est;
-            double dy = desiredY - y_est;
+            double dx = x_des - x_est;
+            double dy = y_des - y_est;
+            
 
             double a = -1.0 * t_est + Math.Atan2(dy, dx);
             if (a < -Math.PI / 2 || a > Math.PI / 2)
@@ -600,7 +609,7 @@ namespace DrRobot.JaguarControl
             }
 
             double p = Math.Sqrt(Math.Pow(dx, 2) + Math.Pow(dy, 2)); //distance away from setpoint
-            double b = -1.0 * t_est - a + desiredT;
+            double b = -1.0 * t_est - a + t_des;
 
             double v = Kpho * p; //set velocity to v (m/s)
             v = Math.Min(maxVelocity, v);
@@ -635,6 +644,17 @@ namespace DrRobot.JaguarControl
                 trajCurrentNode++;
                 x_des = trajList[trajCurrentNode].x;
                 y_des = trajList[trajCurrentNode].y;
+
+                if (trajCurrentNode != trajSize)
+                {
+                    double slope = Math.Atan2(  trajList[trajCurrentNode + 1].y - trajList[trajCurrentNode].y ,
+                                                trajList[trajCurrentNode + 1].x - trajList[trajCurrentNode].x );
+                    t_des = slope;
+                }
+                else{
+                    t_des = desiredT;
+                }
+
                 t_des = 0;
             }
 
@@ -664,10 +684,11 @@ namespace DrRobot.JaguarControl
 
 
             // Create and add the start Node
-
+            Node startNode = new Node(x_est, y_est, 0, 0);
+            AddNode(startNode);
 
             // Create the goal node
-
+            Node goalNode = new Node(desiredX, desiredY, 0, 0);
 
             // Loop until path created
             bool pathFound = false;
@@ -675,13 +696,49 @@ namespace DrRobot.JaguarControl
             int iterations = 0;
             Random randGenerator = new Random();
 
+            const double distance = 1;
 
-            
+            int randCellNumber = 0;
+            int randNodeNumber = 0;
+
+            Node randExpansionNode;
+
+            //check for direct line from start to goal
+            if (!map.CollisionFound(startNode, goalNode, 0.05))
+            {
+                goalNode.nodeIndex = numNodes;
+                goalNode.lastNode = startNode.nodeIndex;
+                pathFound = true;
+            }
+
 
             while (iterations < maxIterations && !pathFound)
             {
+                randCellNumber = (int)(randGenerator.NextDouble() * numOccupiedCells);
+                randNodeNumber = (int)(randGenerator.NextDouble() * numNodesInCell[occupiedCellsList[randCellNumber]]);
 
-                
+                randExpansionNode = NodesInCells[occupiedCellsList[randCellNumber], randNodeNumber];
+
+                double theta = randGenerator.NextDouble()*2*3.1415;
+                double dx = Math.Cos(theta) * distance;
+                double dy = Math.Sin(theta) * distance;
+
+                double newX = randExpansionNode.x + dx;
+                double newY = randExpansionNode.y + dy;
+
+                Node newNode = new Node(newX, newY, numNodes, randExpansionNode.nodeIndex);
+
+                if (!map.CollisionFound(randExpansionNode, newNode, 0.05))
+                {
+                    AddNode(newNode);
+                }
+
+                if (!map.CollisionFound(newNode, goalNode, 0.05))
+                {
+                    goalNode.nodeIndex = numNodes;
+                    goalNode.lastNode = newNode.nodeIndex;
+                    pathFound = true;
+                }
 
                 // Increment number of iterations
                 iterations++;
@@ -689,8 +746,8 @@ namespace DrRobot.JaguarControl
 
 
             // Create the trajectory to follow
-            //BuildTraj(goalNode);
-
+            BuildTraj(goalNode);
+                
             
             // ****************** Additional Student Code: End   ************
 
@@ -793,7 +850,7 @@ namespace DrRobot.JaguarControl
         // and use those measurements to predict the RELATIVE forward 
         // motion and rotation of the robot. These are referred to as
         // distanceTravelled and angleTravelled respectively.
-        public void MotionPrediction()
+        public Boolean MotionPrediction()
         {
 
             // ****************** Additional Student Code: Start ************
@@ -844,7 +901,10 @@ namespace DrRobot.JaguarControl
             lastEncoderPulseL = currentEncoderPulseL;
             lastEncoderPulseR = currentEncoderPulseR;
 
-            
+            if (diffEncoderPulseL == 0 && diffEncoderPulseR == 0)
+                return false;
+
+            return true;
 
             // ****************** Additional Student Code: End   ************
         }
@@ -1081,12 +1141,14 @@ namespace DrRobot.JaguarControl
 
                 if (p == 0)
                 {
-                    //Console.WriteLine(p + "," + expectedMeasurement + "," + LaserData[i] + "," + weight);
+                    Console.WriteLine(p + "," + expectedMeasurement + "," + LaserData[i] + "," + weight);
                 }
 
             }
             if (n > 0)
+            {
                 particles[p].w = Math.Exp(-(weight / n) / sigma);
+            }
 
         }
 

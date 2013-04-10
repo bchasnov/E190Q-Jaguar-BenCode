@@ -27,43 +27,42 @@ namespace DrRobot.JaguarControl
 	        // used both for visual display and for localization.
 
 	        // ****************** Additional Student Code: Start ************
-	
-	        // Change hard code here to change map:
 
-	        numMapSegments = 8;
+            // Change hard code here to change map:   
+            numMapSegments = 8;
             mapSegmentCorners = new double[numMapSegments, 2, 2];
             slopes = new double[numMapSegments];
             intercepts = new double[numMapSegments];
             segmentSizes = new double[numMapSegments];
 
             mapSegmentCorners[0, 0, 0] = 3.38 + 5.79 + 3.55 / 2;
-	        mapSegmentCorners[0,0,1] = 2.794;
+            mapSegmentCorners[0, 0, 1] = 2.794;
             mapSegmentCorners[0, 1, 0] = -3.38 - 5.79 - 3.55 / 2;
             mapSegmentCorners[0, 1, 1] = 2.794;
 
-	        mapSegmentCorners[1,0,0] = -3.55/2;
-	        mapSegmentCorners[1,0,1] = 0.0;
-	        mapSegmentCorners[1,1,0] = -3.55/2;
-	        mapSegmentCorners[1,1,1] = -2.74;
+            mapSegmentCorners[1, 0, 0] = -3.54 / 2;
+            mapSegmentCorners[1, 0, 1] = 0.0;
+            mapSegmentCorners[1, 1, 0] = -3.56 / 2;
+            mapSegmentCorners[1, 1, 1] = -2.74;
 
-	        mapSegmentCorners[2,0,0] = 3.55/2;
-	        mapSegmentCorners[2,0,1] = 0.0;
-	        mapSegmentCorners[2,1,0] = 3.55/2;
-	        mapSegmentCorners[2,1,1] = -2.74;
+            mapSegmentCorners[2, 0, 0] = 3.54 / 2;
+            mapSegmentCorners[2, 0, 1] = 0.0;
+            mapSegmentCorners[2, 1, 0] = 3.56 / 2;
+            mapSegmentCorners[2, 1, 1] = -2.74;
 
-            mapSegmentCorners[3, 0, 0] = 3.55/2;
+            mapSegmentCorners[3, 0, 0] = 3.55 / 2;
             mapSegmentCorners[3, 0, 1] = 0.0;
             mapSegmentCorners[3, 1, 0] = 3.55 / 2 + 5.79;
             mapSegmentCorners[3, 1, 1] = 0.0;
 
-            mapSegmentCorners[4, 0, 0] = -3.55/2;
+            mapSegmentCorners[4, 0, 0] = -3.55 / 2;
             mapSegmentCorners[4, 0, 1] = 0.0;
-            mapSegmentCorners[4, 1, 0] = -3.55/2 - 5.79;
+            mapSegmentCorners[4, 1, 0] = -3.55 / 2 - 5.79;
             mapSegmentCorners[4, 1, 1] = 0.0;
 
-            mapSegmentCorners[5, 0, 0] = -3.55/2;
+            mapSegmentCorners[5, 0, 0] = -3.55 / 2;
             mapSegmentCorners[5, 0, 1] = -2.74;
-            mapSegmentCorners[5, 1, 0] = -3.55/2-3.05;
+            mapSegmentCorners[5, 1, 0] = -3.55 / 2 - 3.05;
             mapSegmentCorners[5, 1, 1] = -2.74;
 
             mapSegmentCorners[6, 0, 0] = 3.55 / 2;
@@ -73,8 +72,9 @@ namespace DrRobot.JaguarControl
 
             mapSegmentCorners[7, 0, 0] = 5.03 / 2;
             mapSegmentCorners[7, 0, 1] = -2.74 - 2.31;
-            mapSegmentCorners[7, 1, 0] = -5.03/2;
+            mapSegmentCorners[7, 1, 0] = -5.03 / 2;
             mapSegmentCorners[7, 1, 1] = -2.74 - 2.31;
+
             // ****************** Additional Student Code: End   ************
 
 
@@ -102,36 +102,85 @@ namespace DrRobot.JaguarControl
         // This function is used in your particle filter localization lab. Find 
         // the range measurement to a segment given the ROBOT POSITION (x, y) and 
         // SENSOR ORIENTATION (t)
-        double GetWallDistance(double x, double y, double t, int segment){
+        double GetWallDistance(double x, double y, double t, int segment)
+        {
+
+            // Set wall vars
+            double X1 = mapSegmentCorners[segment, 0, 0];
+            double Y1 = mapSegmentCorners[segment, 0, 1];
+            double X2 = mapSegmentCorners[segment, 1, 0];
+            double Y2 = mapSegmentCorners[segment, 1, 1];
+            double dist = 0.000;
+
+            //Range t
+            if (t > Math.PI) t -= 2 * Math.PI; else if (t < -Math.PI) t += 2 * Math.PI;
 
 
+            // ****************** Additional Student Code: Start ************
 
+            double intersect_x = (intercepts[segment] + Math.Tan(t) * x - y) / (Math.Tan(t) - slopes[segment]);
+            double intersect_y = slopes[segment] * intersect_x + intercepts[segment];
 
-	        // ****************** Additional Student Code: End   ************
+            if (inRange(intersect_x, X1, X2) && inRange(intersect_y, Y1, Y2) && inFront(intersect_x - x, intersect_y - y, t))
+            {
+                dist = pythagorean(x - intersect_x, y - intersect_y);
+                //Console.WriteLine("seg: " + segment + "interx:" + intersect_x + " intery:" + intersect_y);
+                //inFront(intersect_x - x, intersect_y - y, t);
+            }
+            // ****************** Additional Student Code: End   ************
 
-	        return 0;
+            return dist;
         }
 
+        private Boolean inRange(double a, double one, double two)
+        {
+            return (a <= Math.Max(one, two) && a >= Math.Min(one, two));
+        }
 
+        private Boolean inFront(double dx, double dy, double t)
+        {
+            //t = Navigation.boundAngle(t, 2);
+            //Console.WriteLine("   dx "+dx+" dy "+dy+" atan " + Math.Atan2(dy, dx) +" t " + t);
+            if (Math.Abs(Math.Atan2(dy, dx) - t) < 0.01) return true;
+            return false;
+        }
+
+        private double pythagorean(double a, double b)
+        {
+            return Math.Sqrt(Math.Pow(a, 2) + Math.Pow(b, 2));
+        }
         // This function is used in particle filter localization to find the
         // range to the closest wall segment, for a robot located
         // at position x, y with sensor with orientation t.
 
-        public double GetClosestWallDistance(double x, double y, double t){
+        public double GetClosestWallDistance(double x, double y, double t)
+        {
 
-	        double minDist = 6.000;
+            double minDist = 9999999;
+            double dist = 0;
+            int seg = 0;
+            // ****************** Additional Student Code: Start ************
 
-	        // ****************** Additional Student Code: Start ************
+            for (int i = 0; i < numMapSegments; i++)
+            {
+                dist = GetWallDistance(x, y, t, i);
+                if (dist > 0)
+                {
+                    minDist = Math.Min(minDist, dist);
+                    if (minDist == dist)
+                        seg = i;
+                }
+            }
 
-	        // Put code here that loops through segments, calling the
-	        // function GetWallDistance.
+            // ****************** Additional Student Code: End   ************
 
+            if (minDist == 9999999)
+                minDist = 0;
 
-
-	        // ****************** Additional Student Code: End   ************
-
-	        return minDist;
+            //Console.WriteLine("seg:"+seg);
+            return minDist;
         }
+
 
 
         // This function is called from the motion planner. It is
@@ -223,7 +272,7 @@ namespace DrRobot.JaguarControl
             dist = Math.Min(dist, dist_point_corner2);
 
             return dist;
-        }
+       }
 
 
 
