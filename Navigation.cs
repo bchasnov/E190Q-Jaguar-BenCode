@@ -14,7 +14,7 @@ namespace DrRobot.JaguarControl
         private DateTime globalLoopTime;
 
         public long[] LaserData = new long[DrRobot.JaguarControl.JaguarCtrl.DISDATALEN];
-        public double initialX=0, initialY=-2.8, initialT=1.57;
+        public double initialX=0, initialY=0, initialT=0;
         public double x, y, t;
         public double x_est, y_est, t_est;
         public double desiredX, desiredY, desiredT;
@@ -87,8 +87,8 @@ namespace DrRobot.JaguarControl
         //public Particle[] propagatedParticles;
         public Particle[] tempParticles;
         public int tempParticlesCount = 0;
-        public int numParticles = 1000;
-        public double K_wheelRandomness = 0.15;//0.25
+        public int numParticles = 10000;
+        public double K_wheelRandomness = 1;//0.15;//0.25
         public Random random = new Random();
         public bool newLaserData = false;
         public double laserMaxRange = 4.0;
@@ -1051,16 +1051,16 @@ namespace DrRobot.JaguarControl
             int numRandomness = (int)(tempParticlesCount*percentRandomness);
             while (tempParticlesCount < numParticles*4 && numRandomness > 0)//*(redistributeFactor-2))
             {
-                /*
+                
                 tempParticles[tempParticlesCount].x = x_est + RandomGaussian() * 0.1;
                 tempParticles[tempParticlesCount].y = y_est + RandomGaussian() * 0.1;
                 tempParticles[tempParticlesCount].t = t_est + RandomGaussian() * Math.PI / 100;
-                */
-
+                
+                /*
                 tempParticles[tempParticlesCount].x = map.minX + myRandom.NextDouble() * (map.maxX - map.minX);
                 tempParticles[tempParticlesCount].y = map.minY + myRandom.NextDouble() * (map.maxY - map.minY);
                 tempParticles[tempParticlesCount].t = myRandom.NextDouble() * Math.PI * 2;
-
+                */
                 tempParticlesCount++;
                 numRandomness--;
             }
@@ -1077,7 +1077,7 @@ namespace DrRobot.JaguarControl
             long expectedMeasurement = 0;
             long weight = 0;
             int n = 0;
-            int sigma = 100000;
+            int sigma = 10000000;
 
 	        // ****************** Additional Student Code: Start ************
             for (int i = 0; i < LaserData.Length; i+=18)
@@ -1094,6 +1094,10 @@ namespace DrRobot.JaguarControl
                     n++;
                     weight += (expectedMeasurement - LaserData[i]) * (expectedMeasurement - LaserData[i]);
                 }
+                else
+                {
+                    weight += 1000*1000;
+                }
 
                 if (p == 0)
                 {
@@ -1101,8 +1105,10 @@ namespace DrRobot.JaguarControl
                 }
 
             }
-            if(n>0)
-                particles[p].w = Math.Exp(-(weight / n) / sigma);
+           // if (n > 0)
+                particles[p].w = Math.Exp(-(weight) / sigma);
+            //else
+              //  particles[p].w = 0.01;
 
         }
 
@@ -1147,15 +1153,20 @@ namespace DrRobot.JaguarControl
             // particles[p]. Feel free to use the random.NextDouble() function. 
 	        // It might be helpful to use boundaries defined in the
 	        // Map.cs file (e.g. map.minX)
-            
             particles[p].x = map.minX + myRandom.NextDouble()*(map.maxX - map.minX);
             particles[p].y = map.minY + myRandom.NextDouble() * (map.maxY - map.minY);
-            particles[p].t = RandomGaussian() * 0.1 + initialT;
-            /*double radius = 2;
-            particles[p].x = RandomGaussian() * radius + initialX;
-            particles[p].y = RandomGaussian() * radius + initialY;
+            particles[p].t = myRandom.NextDouble() * 2 * 3.1415;
+            
+            /*particles[p].x = map.minX + myRandom.NextDouble()*(map.maxX - map.minX);
+            particles[p].y = map.minY + myRandom.NextDouble() * (map.maxY - map.minY);
             particles[p].t = RandomGaussian() * 0.1 + initialT;
             */
+            double radius = 2;
+
+            //particles[p].x = RandomGaussian() * radius + initialX;
+            //particles[p].y = RandomGaussian() * radius + initialY;
+            //particles[p].t = RandomGaussian() * 0.1 + initialT;
+            
             particles[p].w = 1 / numParticles;
 
             // ****************** Additional Student Code: End   ************
